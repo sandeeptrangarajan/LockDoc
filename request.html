@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Request Access — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <button class="back-btn" data-back="scan.html" aria-label="Back"><span class="i" id="back-icon"></span></button>
+    <h1>Select Documents</h1>
+  </header>
+
+  <main class="app-main no-nav-padding">
+
+    <!-- Step 1: choose documents -->
+    <div class="stack" id="select-view">
+      <p class="text-muted text-sm">Choose which documents you'd like to request access to.</p>
+      <div class="stack" id="doc-select-list"></div>
+      <button class="btn btn-primary" id="submit-request-btn" disabled>Send request (0 selected)</button>
+    </div>
+
+    <!-- Step 2: waiting for approval -->
+    <div class="stack text-center hidden pt-30" id="waiting-view">
+      <div class="icon-tile blue lg rounded-full mx-auto">
+        <div class="spinner dark"></div>
+      </div>
+      <h2 class="text-lg font-semibold mt-16">Waiting for approval</h2>
+      <p class="text-muted text-sm mt-8">
+        <span id="owner-name-text">The vault owner</span> needs to verify with their PIN before your request is approved.
+      </p>
+      <div class="card mt-16 text-left" id="waiting-summary"></div>
+      <a href="approval.html" class="btn btn-secondary mt-16">Open approval screen (demo)</a>
+    </div>
+
+    <!-- Step 3: decision result -->
+    <div class="stack text-center hidden pt-30" id="result-view">
+      <div class="icon-tile lg rounded-full mx-auto" id="result-icon-tile"></div>
+      <h2 class="text-lg font-semibold mt-16" id="result-title"></h2>
+      <p class="text-muted text-sm mt-8" id="result-subtitle"></p>
+      <div class="stack mt-16">
+        <a href="#" class="btn btn-primary btn-auto hidden" id="view-docs-btn">View documents</a>
+        <a href="index.html" class="btn btn-outline">Back to home</a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/connection.js"></script>
+<script src="js/request.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function(){
+  document.getElementById('back-icon').innerHTML = LD.icons.back;
+
+  const sessionId = LD.conn.getSessionIdFromUrl();
+  let session = sessionId ? LD.data.getActiveSession(sessionId) : null;
+
+  if(!session && sessionId && LD.data.isJwtAuthenticated()){
+    try {
+      const response = await LD.api.getConnectionSession(sessionId);
+      if(response && response.success && response.session){
+        session = response.session;
+        LD.data.addActiveSession(session);
+      }
+    } catch (err) {
+      console.error('Failed to load active session:', err);
+    }
+  }
+
+  if(!session || session.status !== 'active'){
+    document.getElementById('select-view').innerHTML = '<div class="empty-state"><div class="icon">' + LD.icons.x + '</div><p class="font-semibold">Session not active</p><p class="text-sm mt-4">Please wait for the vault owner to accept your request and try again.</p></div><a href="scan.html" class="btn btn-primary mt-16">Scan again</a>';
+    return;
+  }
+
+  renderDocSelect();
+  window.addEventListener('ld-vault-documents-loaded', function(){
+    renderDocSelect();
+  });
+
+  function renderDocSelect(){
+    const categories = LD.data.categories();
+    const docs = LD.data.documents();
+    const list = document.getElementById('doc-select-list');
+
+    list.innerHTML = docs.map(d => {
+      const cat = categories.find(c => c.id === d.category) || { color: 'blue' };
+      return '<label class="checkbox-row" data-doc="' + d.id + '">' +
+        '<input type="checkbox" value="' + d.id + '">' +
+        '<div class="icon-tile ' + cat.color + ' icon-tile-sm">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
+        '<div class="flex-1"><p class="font-semibold text-sm">' + d.name + '</p><p class="text-muted text-xs">' + d.issuer + '</p></div>' +
+      '</label>';
+    }).join('');
+
+    document.querySelectorAll('.checkbox-row').forEach(row => {
+      row.addEventListener('click', function(e){
+        const checkbox = row.querySelector('input');
+        // avoid double toggle when clicking the input itself
+        if(e.target !== checkbox) checkbox.checked = !checkbox.checked;
+        const docId = row.getAttribute('data-doc');
+        LD.request.toggle(docId);
+        row.classList.toggle('checked', checkbox.checked);
+        updateSubmitBtn();
+      });
+    });
+
+    updateSubmitBtn();
+  }
+
+  function updateSubmitBtn(){
+    const count = LD.request.selectedIds.size;
+    const btn = document.getElementById('submit-request-btn');
+    btn.textContent = 'Send request (' + count + ' selected)';
+    btn.disabled = count === 0;
+  }
+
+  document.getElementById('submit-request-btn').addEventListener('click', async function(){
+    var requests = await LD.request.submit(session.sessionId);
+    var requestCount = requests.length;
+
+    document.getElementById('select-view').style.display = 'none';
+    document.getElementById('waiting-view').style.display = 'flex';
+
+    document.getElementById('owner-name-text').textContent = session.ownerName || 'Vault owner';
+    document.getElementById('waiting-summary').innerHTML =
+      '<p class="text-xs text-muted text-uppercase font-semibold letter-spacing-sm">Request summary</p>' +
+      '<p class="text-sm mt-8"><strong>' + session.requesterName + '</strong> requested ' + requestCount + ' document(s)</p>' +
+      (session.purpose ? '<p class="text-muted text-xs mt-4">"' + session.purpose + '"</p>' : '');
+
+    LD.request.pollForDecision(session.sessionId, showResult);
+  });
+
+  function showResult(docRequest){
+    document.getElementById('select-view').style.display = 'none';
+    document.getElementById('waiting-view').style.display = 'none';
+    document.getElementById('result-view').style.display = 'flex';
+
+    const approved = docRequest.status === 'approved';
+    document.getElementById('result-icon-tile').className = 'icon-tile lg ' + (approved ? 'green' : 'red');
+    document.getElementById('result-icon-tile').innerHTML = approved ? LD.icons.check : LD.icons.x;
+    document.getElementById('result-title').textContent = approved ? 'Request approved' : 'Request denied';
+    document.getElementById('result-subtitle').textContent = approved
+      ? 'You can now view the shared document for a limited time.'
+      : 'The vault owner did not approve this request.';
+
+    if(approved){
+      const requestId = docRequest.requestId;
+      const token = docRequest.accessToken;
+      const viewBtn = document.getElementById('view-docs-btn');
+      viewBtn.style.display = 'block';
+      if(requestId && token){
+        viewBtn.href = 'viewer.html?requestId=' + encodeURIComponent(requestId) + '&token=' + encodeURIComponent(token);
+      } else {
+        viewBtn.href = 'index.html';
+      }
+    }
+  }
+
+  window.addEventListener('beforeunload', LD.request.stopPolling);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "Arjun Mehta",
+  "initials": "AM",
+  "memberSince": "2026-01-01T00:00:00.000Z",
+  "pinSet": true,
+  "_note": "This file documents the shape of the seed data written into localStorage on first launch (see js/storage.js -> LD.init). It is not fetched at runtime to avoid file:// CORS issues; edit the seed constants in storage.js to change defaults."
+}

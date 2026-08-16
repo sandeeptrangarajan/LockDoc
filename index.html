@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>LockDoc — Imperial Royal Document Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  .search-bar-input {
+    background: rgba(17, 24, 39, 0.9);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-pill);
+    padding: 10px 18px;
+    font-size: 14px;
+    color: var(--text);
+    width: 210px;
+    transition: all 0.22s var(--ease);
+  }
+  .search-bar-input:focus {
+    width: 270px;
+    background: #1F2937;
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+  }
+  .view-mode-btn {
+    padding: 7px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--gold-border);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.2s var(--ease);
+  }
+  .view-mode-btn.active {
+    background: var(--gold-gradient);
+    color: #0B0F19;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  }
+  .storage-bar-wrap {
+    width: 140px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--gold-border);
+    overflow: hidden;
+  }
+  .storage-bar-fill {
+    height: 100%;
+    background: var(--gold-gradient);
+    border-radius: var(--radius-pill);
+    transition: width 0.3s var(--ease);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+  }
+  .dropzone {
+    border: 2px dashed var(--gold-primary);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    background: rgba(212, 175, 55, 0.08);
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .dropzone:hover {
+    background: rgba(212, 175, 55, 0.18);
+    border-color: #FFD700;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Royal Imperial Header -->
+  <header class="app-header">
+    <div class="row flex-1 items-start gap-12">
+      <div class="icon-circle" style="background:var(--gold-gradient);color:#0B0F19;font-weight:800;font-size:18px;box-shadow:0 0 15px rgba(212,175,55,0.5);">
+        👑
+      </div>
+      <div>
+        <h1 class="text-20">LockDoc</h1>
+        <p class="text-xs text-gold" style="line-height:1;font-weight:700;">IMPERIAL ROYAL VAULT</p>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="row gap-10">
+      <input type="text" id="dashboard-search-input" class="search-bar-input" placeholder="Search royal documents...">
+      <button class="btn btn-primary btn-sm" id="open-upload-modal-btn">+ Upload</button>
+      <a href="approval.html" class="back-btn" aria-label="Requests" id="header-bell-btn" title="Pending Approvals"></a>
+      <a href="public/login.html" class="back-btn" aria-label="Account" id="header-user-btn" title="Account Login">
+        <span class="icon-sm" id="user-nav-icon"></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <div class="stack">
+
+      <!-- User Welcome & Gold Storage Bar -->
+      <div class="card p-24" style="background:linear-gradient(135deg, rgba(30,30,56,0.9) 0%, rgba(17,24,39,0.95) 100%);">
+        <div class="row-between">
+          <div class="row gap-16">
+            <div id="user-avatar" class="icon-tile lg animated-pulse" style="border-radius:50%;font-weight:800;font-size:22px;box-shadow:0 0 25px rgba(212,175,55,0.5);background:var(--gold-gradient);color:#0B0F19;border:2px solid #FFD700;">—</div>
+            <div>
+              <div class="badge badge-primary mb-1">👑 ROYAL VAULT IDENTITY</div>
+              <h1 style="font-size:24px;font-weight:800;background:var(--gold-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="user-name">—</h1>
+              <p class="text-xs text-muted mt-1" id="user-email-role">—</p>
+            </div>
+          </div>
+
+          <!-- Storage Meter -->
+          <div class="text-right">
+            <div class="row gap-8 justify-center mb-1">
+              <span class="text-xs font-bold text-gold" id="storage-label">0 MB / 3 MB Used</span>
+            </div>
+            <div class="storage-bar-wrap">
+              <div class="storage-bar-fill" id="storage-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Vault Card -->
+      <div class="hero-card">
+        <div class="row-between pos-relative z-1">
+          <div>
+            <div class="badge badge-primary mb-2" style="background:rgba(212,175,55,0.25);color:var(--gold-light);border-color:var(--gold-border-strong);">
+              <span class="badge-dot" style="background:var(--gold-light);"></span> HARDWARE PIN ENCRYPTED VAULT
+            </div>
+            <h2 class="text-2xl text-white mt-1" id="doc-count-hero">0 Documents</h2>
+            <p class="row text-14 opacity-85 mt-2">
+              <span class="icon-sm text-gold" id="hero-lock-icon"></span>
+              Protected by 256-bit DigiLocker Verification PIN
+            </p>
+          </div>
+          <div class="icon-circle animated-float" style="background:rgba(212,175,55,0.2);width:64px;height:64px;border-radius:22px;border-color:var(--gold-border-strong);">
+            <span class="icon-sm text-gold" id="hero-shield-icon" style="width:32px;height:32px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="grid-2">
+        <a href="javascript:void(0)" id="quick-upload-btn" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+          <div class="icon-tile blue" id="upload-icon"></div>
+          <div>
+            <p class="font-bold text-16 text-gold">Upload Document</p>
+            <p class="text-muted text-xs mt-1">Upload PDF, image, or certificate to vault</p>
+          </div>
+        </a>
+        <a href="qr.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+          <div class="icon-tile amber" id="qr-icon"></div>
+          <div>
+            <p class="font-bold text-16 text-gold">My Permanent QR</p>
+            <p class="text-muted text-xs mt-1">Share permanent vault QR &amp; allow access</p>
+          </div>
+        </a>
+        <a href="scan.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+          <div class="icon-tile green" id="scan-icon"></div>
+          <div>
+            <p class="font-bold text-16 text-gold">Scan QR Code</p>
+            <p class="text-muted text-xs mt-1">Request access to external vaults via camera</p>
+          </div>
+        </a>
+        <a href="approval.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+          <div class="icon-tile amber" id="requests-icon"></div>
+          <div>
+            <p class="font-bold text-16 text-gold">Access Requests</p>
+            <p class="text-muted text-xs mt-1">PIN verify pending view requests</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Royal Stats Metrics Row -->
+      <div>
+        <p class="section-title">Vault Metrics</p>
+        <div class="grid-3" id="stats-row"></div>
+      </div>
+
+      <!-- My Vaults & Collections Section -->
+      <div id="my-vaults-section">
+        <div class="row-between mb-3">
+          <div>
+            <p class="section-title" style="margin-bottom:2px;">MongoDB Vault Folders</p>
+            <h3 class="text-20 font-extrabold text-gold">My Vault Collections</h3>
+          </div>
+          <button class="btn btn-outline btn-sm" id="reset-vault-filter-btn" style="display:none;color:var(--gold-light);border-color:var(--gold-border);">✕ View All Vaults</button>
+        </div>
+        <div class="grid-2" id="vault-collections-grid"></div>
+      </div>
+
+      <!-- Document Explorer Section -->
+      <div>
+        <div class="row-between mb-3">
+          <div>
+            <h3 class="text-20 font-extrabold text-gold">Imperial Document Explorer</h3>
+            <p class="text-xs text-muted">Browse, view, share, and manage your documents</p>
+          </div>
+          <div class="row gap-8">
+            <button class="view-mode-btn active" id="view-mode-grid">Grid View</button>
+            <button class="view-mode-btn" id="view-mode-table">List View</button>
+          </div>
+        </div>
+
+        <!-- Category Chips Bar -->
+        <div class="row overflow-x-auto items-start gap-8 mb-4" id="category-chips"></div>
+
+        <!-- Document Grid / List Container -->
+        <div id="documents-container" class="grid-2"></div>
+      </div>
+
+      <!-- Audit Activity Log -->
+      <div>
+        <p class="section-title">Recent Vault Activity Log</p>
+        <div class="stack" id="activity-list"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="bottom-nav-slot" data-active="home"></div>
+</div>
+
+<!-- ============================================================
+     Upload Document Modal Sheet
+     ============================================================ -->
+<div class="overlay" id="upload-modal-overlay">
+  <div class="sheet text-left" style="max-width:560px;">
+    <div class="sheet-handle"></div>
+    <div class="row-between mb-4">
+      <div>
+        <div class="badge badge-primary mb-1">👑 ROYAL VAULT UPLOADER</div>
+        <h2 class="text-20 font-extrabold text-gold">Upload New Document</h2>
+        <p class="text-xs text-muted">Add files to your encrypted hardware-protected vault</p>
+      </div>
+      <button class="btn btn-outline btn-sm" id="close-upload-modal-btn">✕</button>
+    </div>
+
+    <form id="upload-form" class="stack gap-14">
+      <div class="field">
+        <label for="upload-vault-name">Document / Collection Name</label>
+        <input type="text" id="upload-vault-name" placeholder="e.g. Imperial Certificates 2026" required>
+      </div>
+
+      <div class="field">
+        <label for="upload-category">Category</label>
+        <select id="upload-category" required>
+          <option value="identity">Identity</option>
+          <option value="financial">Financial</option>
+          <option value="education">Education</option>
+          <option value="property">Property</option>
+          <option value="insurance">Insurance</option>
+          <option value="medical">Medical</option>
+          <option value="personal">Personal</option>
+          <option value="other" selected>Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Select Document File(s)</label>
+        <div class="dropzone" id="dropzone">
+          <span class="icon-sm text-primary mb-2" id="upload-cloud-icon" style="width:40px;height:40px;margin:0 auto;display:block;"></span>
+          <p class="font-bold text-15 text-gold">Click or drop files here to upload</p>
+          <p class="text-xs text-muted mt-1">Supports PDF, PNG, JPG, DOCX up to 10 MB per file</p>
+          <input type="file" id="upload-file-input" name="documents" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.docx">
+        </div>
+        <div id="file-list-preview" class="text-xs text-gold mt-2 font-semibold"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-4" id="submit-upload-btn">Upload to Royal Vault</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     Document QR Share Modal Sheet
+     ============================================================ -->
+<div class="overlay" id="qr-modal-overlay">
+  <div class="sheet text-center" style="max-width:440px;">
+    <div class="sheet-handle"></div>
+    <div class="badge badge-success mb-2"><span class="badge-dot"></span> ENCRYPTED QR RELEASE</div>
+    <h2 class="text-18 font-bold text-gold" id="qr-modal-title">Document Access QR</h2>
+    <p class="text-xs text-muted mt-1">Scan this QR code to request PIN-verified access</p>
+    <div id="doc-qr-canvas" class="flex-center p-20 my-4" style="background:#fff;border-radius:18px;box-shadow:var(--shadow-sm);border:2px solid var(--gold-border-strong);max-width:220px;margin:16px auto;"></div>
+    <p class="text-xs text-faint break-all mb-4" id="doc-qr-link"></p>
+    <div class="grid-2">
+      <button class="btn btn-primary" id="copy-qr-link-btn">Copy Share Link</button>
+      <button class="btn btn-outline" id="close-qr-modal-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/qr.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentCategory = urlParams.get('cat') || 'all';
+  let selectedVaultName = null;
+  let viewMode = 'grid';
+  let selectedFiles = [];
+
+  // Icons
+  document.getElementById('hero-shield-icon').innerHTML = LD.icons.shield;
+  document.getElementById('hero-lock-icon').innerHTML = LD.icons.lock;
+  document.getElementById('upload-icon').innerHTML = LD.icons.folder;
+  document.getElementById('qr-icon').innerHTML = LD.icons.qr;
+  document.getElementById('scan-icon').innerHTML = LD.icons.scan;
+  document.getElementById('requests-icon').innerHTML = LD.icons.bell;
+  document.getElementById('user-nav-icon').innerHTML = LD.icons.users;
+  document.getElementById('upload-cloud-icon').innerHTML = LD.icons.folder;
+
+  // Render My Vault Collections (MongoDB Vault Folders)
+  async function renderVaultCollections() {
+    const grid = document.getElementById('vault-collections-grid');
+    if (!grid) return;
+
+    try {
+      let vaults = [];
+      if (LD.api.getUserVaults) {
+        const res = await LD.api.getUserVaults();
+        if (res && res.success && res.vaults) {
+          vaults = res.vaults;
+        }
+      }
+
+      // Fallback: infer vaults from documents if API response is empty
+      if (vaults.length === 0) {
+        const docs = LD.data.documents();
+        const vMap = {};
+        docs.forEach(d => {
+          const vName = d.vaultName || 'Personal Vault';
+          if (!vMap[vName]) vMap[vName] = { vaultName: vName, category: d.category || 'Personal', documentCount: 0 };
+          vMap[vName].documentCount++;
+        });
+        vaults = Object.values(vMap);
+      }
+
+      if (vaults.length === 0) {
+        grid.innerHTML = '<div class="empty-state w-full" style="grid-column:1/-1;"><div class="icon">📁</div><p class="text-sm font-bold text-gold">No Vault Collections Yet</p><p class="text-xs text-muted">Upload a document above to create your first vault collection.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = vaults.map(v => {
+        const isSelected = selectedVaultName === v.vaultName;
+        const cat = LD.data.categories().find(c => c.id === v.category) || { color: 'amber', name: v.category || 'Personal' };
+        return '<div class="card card-interactive stack gap-10" style="background:var(--royal-card);' + (isSelected ? 'border-color:var(--gold-primary);box-shadow:0 0 25px rgba(212,175,55,0.4);' : 'border-color:var(--gold-border);') + '" data-vault-name="' + v.vaultName + '">' +
+          '<div class="row-between">' +
+            '<div class="icon-tile ' + cat.color + '">📁</div>' +
+            '<span class="badge badge-primary">' + (v.documentCount || 1) + ' Doc' + ((v.documentCount || 1) > 1 ? 's' : '') + '</span>' +
+          '</div>' +
+          '<div>' +
+            '<p class="font-bold text-16 text-gold truncate">' + v.vaultName + '</p>' +
+            '<p class="text-xs text-muted mt-1">Category: ' + cat.name + '</p>' +
+          '</div>' +
+          '<button class="btn ' + (isSelected ? 'btn-primary' : 'btn-secondary') + ' btn-sm mt-1 w-full">' + (isSelected ? '✓ Vault Selected' : '📁 Open Vault') + '</button>' +
+        '</div>';
+      }).join('');
+
+      grid.querySelectorAll('[data-vault-name]').forEach(card => {
+        card.addEventListener('click', () => {
+          const vName = card.getAttribute('data-vault-name');
+          if (selectedVaultName === vName) {
+            selectedVaultName = null;
+            document.getElementById('reset-vault-filter-btn').style.display = 'none';
+          } else {
+            selectedVaultName = vName;
+            document.getElementById('reset-vault-filter-btn').style.display = 'block';
+          }
+          renderVaultCollections();
+          renderDocuments();
+        });
+      });
+    } catch(err) {
+      console.error('Failed to load vaults:', err);
+    }
+  }
+
+  document.getElementById('reset-vault-filter-btn').addEventListener('click', () => {
+    selectedVaultName = null;
+    document.getElementById('reset-vault-filter-btn').style.display = 'none';
+    renderVaultCollections();
+    renderDocuments();
+  });
+
+  // Render Category Chips
+  function renderCategoryChips() {
+    const categories = [{ id: 'all', name: 'All Documents', color: 'amber' }].concat(LD.data.categories());
+    const chipsContainer = document.getElementById('category-chips');
+    chipsContainer.innerHTML = categories.map(c => {
+      const isActive = c.id === currentCategory;
+      return '<button class="badge ' + (isActive ? 'badge-primary' : 'badge-neutral') + '" style="padding:10px 16px;font-size:13px;white-space:nowrap;flex-shrink:0;cursor:pointer;border:none;" data-cat="' + c.id + '">' + c.name + '</button>';
+    }).join('');
+
+    chipsContainer.querySelectorAll('[data-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentCategory = btn.getAttribute('data-cat');
+        renderCategoryChips();
+        renderDocuments();
+      });
+    });
+  }
+
+  // Filter Documents by Category, Vault, and Search Term
+  function getFilteredDocuments() {
+    let docs = currentCategory === 'all' ? LD.data.documents() : LD.data.documentsByCategory(currentCategory);
+    if (selectedVaultName) {
+      docs = docs.filter(d => (d.vaultName || '').toLowerCase() === selectedVaultName.toLowerCase());
+    }
+    const query = document.getElementById('dashboard-search-input').value.trim().toLowerCase();
+    if (query) {
+      docs = docs.filter(d => (d.name || '').toLowerCase().includes(query) || (d.issuer || '').toLowerCase().includes(query) || (d.category || '').toLowerCase().includes(query) || (d.vaultName || '').toLowerCase().includes(query));
+    }
+    return docs;
+  }
+
+  // Render Documents Grid / Table
+  function renderDocuments() {
+    const docs = getFilteredDocuments();
+    const container = document.getElementById('documents-container');
+
+    if (docs.length === 0) {
+      container.className = 'w-full';
+      container.innerHTML = '<div class="empty-state"><div class="icon">👑</div><p class="text-sm font-bold text-gold">No documents found</p><p class="text-xs mt-1 text-muted">Upload a new document or change your search filter.</p></div>';
+      return;
+    }
+
+    if (viewMode === 'grid') {
+      container.className = 'grid-2';
+      container.innerHTML = docs.map(d => {
+        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'amber', name: d.category || 'Document' };
+        const fileExt = (d.name || '').split('.').pop().toUpperCase();
+        return '<div class="card stack gap-12" style="background:var(--royal-card);border-color:var(--gold-border);">' +
+          '<div class="row-between">' +
+            '<div class="icon-tile ' + cat.color + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
+            '<span class="badge badge-primary">' + fileExt + '</span>' +
+          '</div>' +
+          '<div>' +
+            '<p class="font-bold text-16 text-gold truncate">' + d.name + '</p>' +
+            '<p class="text-muted text-xs mt-1">Issuer: ' + (d.issuer || 'Vault') + '</p>' +
+          '</div>' +
+          '<div class="row-between mt-2 pt-2" style="border-top:1px dashed var(--border);">' +
+            '<span class="badge badge-success"><span class="badge-dot"></span> Encrypted</span>' +
+            '<div class="row gap-8">' +
+              '<a href="viewer.html?doc=' + encodeURIComponent(d.id) + '" class="btn btn-secondary btn-sm" title="View Document">👁️ View</a>' +
+              '<button class="btn btn-outline btn-sm share-qr-btn" data-doc-id="' + d.id + '" data-doc-name="' + d.name + '">📱 QR</button>' +
+              '<button class="btn btn-danger btn-sm delete-doc-btn" data-doc-id="' + d.id + '" title="Delete Document">🗑️</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    } else {
+      container.className = 'w-full stack gap-10';
+      container.innerHTML = docs.map(d => {
+        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'amber', name: d.category || 'Document' };
+        return '<div class="list-row card-interactive">' +
+          '<div class="icon-tile ' + cat.color + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<p class="font-bold text-15 text-gold truncate">' + d.name + '</p>' +
+            '<p class="text-muted text-xs">' + cat.name + ' &middot; Issued by ' + d.issuer + '</p>' +
+          '</div>' +
+          '<div class="row gap-8">' +
+            '<a href="viewer.html?doc=' + encodeURIComponent(d.id) + '" class="btn btn-secondary btn-sm">View</a>' +
+            '<button class="btn btn-outline btn-sm share-qr-btn" data-doc-id="' + d.id + '" data-doc-name="' + d.name + '">QR Code</button>' +
+            '<button class="btn btn-danger btn-sm delete-doc-btn" data-doc-id="' + d.id + '">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // Wire QR share buttons
+    container.querySelectorAll('.share-qr-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const docId = btn.getAttribute('data-doc-id');
+        const docName = btn.getAttribute('data-doc-name');
+        openQrModal(docId, docName);
+      });
+    });
+
+    // Wire Delete buttons
+    container.querySelectorAll('.delete-doc-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const docId = btn.getAttribute('data-doc-id');
+        if (confirm('Are you sure you want to delete this document from your vault?')) {
+          try {
+            await LD.api.deleteDocument('me', docId);
+            LD.ui.toast('Document deleted successfully', 'success');
+            await LD.app.loadVaultDocuments();
+            renderDashboard();
+          } catch(err) {
+            LD.ui.toast('Failed to delete document', 'error');
+          }
+        }
+      });
+    });
+  }
+
+  // Render Full Dashboard State
+  function renderDashboard() {
+    const authUser = LD.data.currentUser();
+    const user = authUser
+      ? {
+          name: authUser.name || authUser.fullName || authUser.email || 'User',
+          initials: ((authUser.name || authUser.fullName || authUser.email || '?').trim().charAt(0) || '?').toUpperCase(),
+          email: authUser.email || '',
+          role: authUser.role || 'Holder'
+        }
+      : LD.data.user();
+
+    const docs = LD.data.documents();
+    const pending = LD.data.pendingSessions();
+
+    document.getElementById('user-name').textContent = user.name;
+    document.getElementById('user-avatar').textContent = user.initials;
+    document.getElementById('user-email-role').textContent = user.email ? (user.email + ' • ' + user.role.toUpperCase()) : 'Royal Vault Identity';
+    document.getElementById('doc-count-hero').textContent = docs.length + ' Encrypted Documents';
+
+    const hour = new Date().getHours();
+    document.getElementById('greeting').textContent = hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
+
+    // Storage calculation
+    const totalBytes = docs.reduce((acc, d) => acc + (d.metadata?.size || 150000), 0);
+    const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
+    document.getElementById('storage-label').textContent = mbUsed + ' MB / 3.00 MB Used';
+    document.getElementById('storage-bar').style.width = Math.min(100, (mbUsed / 3) * 100) + '%';
+
+    // Metrics Row
+    const statsRow = document.getElementById('stats-row');
+    const stats = [
+      { value: docs.length, label: 'Vault Documents' },
+      { value: pending.length, label: 'Pending Approvals' },
+      { value: LD.data.approvedSessions().length, label: 'Active Sessions' }
+    ];
+    statsRow.innerHTML = stats.map(s =>
+      '<div class="stat-card"><p class="stat-value">' + s.value + '</p><p class="stat-label">' + s.label + '</p></div>'
+    ).join('');
+
+    renderVaultCollections();
+    renderCategoryChips();
+    renderDocuments();
+
+    // Activity
+    const activity = LD.data.activity(5);
+    const activityList = document.getElementById('activity-list');
+    if (activity.length === 0) {
+      activityList.innerHTML = '<div class="empty-state"><div class="icon">👑</div><p class="text-sm font-semibold text-gold">No activity logged yet</p></div>';
+    } else {
+      activityList.innerHTML = activity.map(a => {
+        const iconMap = { connect: 'users', approve: 'check', deny: 'x', view: 'eye', request: 'folder' };
+        const colorMap = { connect: 'amber', approve: 'green', deny: 'red', view: 'blue', request: 'amber' };
+        return '<div class="list-row">' +
+          '<div class="icon-tile ' + (colorMap[a.type]||'amber') + '">' + (LD.icons[iconMap[a.type]]||LD.icons.shield) + '</div>' +
+          '<div style="flex:1;"><p class="text-sm font-semibold text-gold">' + a.title + '</p><p class="text-muted text-xs">' + LD.ui.timeAgo(a.at) + '</p></div>' +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  // View Mode Switchers
+  document.getElementById('view-mode-grid').addEventListener('click', () => {
+    viewMode = 'grid';
+    document.getElementById('view-mode-grid').classList.add('active');
+    document.getElementById('view-mode-table').classList.remove('active');
+    renderDocuments();
+  });
+  document.getElementById('view-mode-table').addEventListener('click', () => {
+    viewMode = 'table';
+    document.getElementById('view-mode-table').classList.add('active');
+    document.getElementById('view-mode-grid').classList.remove('active');
+    renderDocuments();
+  });
+
+  // Live Search Input Listener
+  document.getElementById('dashboard-search-input').addEventListener('input', renderDocuments);
+
+  // Upload Modal Sheet Open/Close
+  const uploadOverlay = document.getElementById('upload-modal-overlay');
+  function openUploadModal() { uploadOverlay.classList.add('show'); }
+  function closeUploadModal() { uploadOverlay.classList.remove('show'); }
+  document.getElementById('open-upload-modal-btn').addEventListener('click', openUploadModal);
+  document.getElementById('quick-upload-btn').addEventListener('click', openUploadModal);
+  document.getElementById('close-upload-modal-btn').addEventListener('click', closeUploadModal);
+
+  // File Dropzone Listeners
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('upload-file-input');
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    selectedFiles = Array.from(fileInput.files);
+    document.getElementById('file-list-preview').innerHTML = selectedFiles.map(f => '📄 <strong>' + f.name + '</strong> (' + (f.size/1024).toFixed(1) + ' KB)').join('<br>');
+  });
+
+  // Submit Upload Form
+  document.getElementById('upload-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const vaultName = document.getElementById('upload-vault-name').value.trim();
+    const category = document.getElementById('upload-category').value;
+
+    if (!selectedFiles.length) {
+      LD.ui.toast('Please select at least one file to upload', 'error');
+      return;
+    }
+
+    const submitBtn = document.getElementById('submit-upload-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading to Royal Vault...';
+
+    const formData = new FormData();
+    formData.append('vaultName', vaultName);
+    formData.append('category', category);
+    selectedFiles.forEach(file => formData.append('documents', file));
+
+    try {
+      const result = await LD.api.uploadDocuments(formData);
+      if (result && result.success) {
+        LD.ui.toast('Document uploaded to Royal Vault successfully!', 'success');
+        closeUploadModal();
+        selectedFiles = [];
+        document.getElementById('file-list-preview').innerHTML = '';
+        document.getElementById('upload-form').reset();
+        await LD.app.loadVaultDocuments();
+        renderDashboard();
+      } else {
+        LD.ui.toast(result.message || 'Failed to upload document', 'error');
+      }
+    } catch(err) {
+      LD.ui.toast('Upload failed. Please check network.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Upload to Royal Vault';
+    }
+  });
+
+  // QR Share Modal
+  const qrOverlay = document.getElementById('qr-modal-overlay');
+  function openQrModal(docId, docName) {
+    document.getElementById('qr-modal-title').textContent = docName || 'Document QR';
+    const canvas = document.getElementById('doc-qr-canvas');
+    canvas.innerHTML = '';
+    const shareUrl = window.location.origin + '/viewer.html?doc=' + encodeURIComponent(docId);
+    new QRCode(canvas, { text: shareUrl, width: 180, height: 180 });
+    document.getElementById('doc-qr-link').textContent = shareUrl;
+    qrOverlay.classList.add('show');
+  }
+  document.getElementById('close-qr-modal-btn').addEventListener('click', () => qrOverlay.classList.remove('show'));
+  document.getElementById('copy-qr-link-btn').addEventListener('click', () => {
+    const link = document.getElementById('doc-qr-link').textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link).then(() => LD.ui.toast('Share link copied to clipboard', 'success'));
+    }
+  });
+
+  // Bind live DB load events
+  window.addEventListener('ld-vault-documents-loaded', renderDashboard);
+  window.addEventListener('ld-user-profile-loaded', renderDashboard);
+  renderDashboard();
+});
+</script>
+</body>
+</html>

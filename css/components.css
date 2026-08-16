@@ -1,0 +1,422 @@
+/* =========================================================
+   LockDoc — components.css
+   Royal Imperial Buttons, Cards, Badges, Nav, Keypad, Toast
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Buttons — Imperial Gold 3D Elevate
+   --------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 26px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.22s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--gold-gradient);
+  color: #0B0F19;
+  box-shadow: 0 8px 24px -2px rgba(212, 175, 55, 0.4);
+}
+.btn-primary:hover {
+  box-shadow: 0 14px 32px 0 rgba(212, 175, 55, 0.55);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-light);
+  border: 1px solid var(--gold-border);
+}
+.btn-secondary:hover {
+  background: rgba(212, 175, 55, 0.25);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--gold-primary);
+  color: var(--gold-light);
+}
+
+.btn-danger {
+  background: rgba(244, 63, 94, 0.15);
+  color: #FCA5A5;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(244, 63, 94, 0.3);
+  color: #ffffff;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.4);
+}
+
+.btn-sm {
+  padding: 10px 18px;
+  font-size: 13.5px;
+  width: auto;
+  border-radius: var(--radius-sm);
+}
+.btn-block { width: 100%; }
+
+/* ---------------------------------------------------------
+   Royal Cards & Obsidian Surfaces
+   --------------------------------------------------------- */
+.card {
+  background: var(--royal-card);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.25s var(--ease);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+.card-interactive:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--gold-border-strong);
+  background: var(--royal-card-hover);
+  transform: translateY(-3px);
+}
+.card-interactive:active {
+  transform: scale(0.98);
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #1E1E38 0%, #111827 50%, #070A10 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-md), 0 0 40px rgba(212, 175, 55, 0.2);
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid var(--gold-border-strong);
+}
+.hero-card::after {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0) 70%);
+  top: -110px;
+  right: -70px;
+  pointer-events: none;
+}
+
+.stat-card {
+  background: var(--royal-card);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  text-align: left;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s var(--ease);
+}
+.stat-card:hover {
+  border-color: var(--gold-border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card .stat-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------
+   Royal Icon Tiles
+   --------------------------------------------------------- */
+.icon-tile {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease);
+  border: 1px solid var(--border);
+}
+.icon-tile.blue { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border-color: rgba(59, 130, 246, 0.3); }
+.icon-tile.green { background: rgba(16, 185, 129, 0.15); color: #34D399; border-color: rgba(16, 185, 129, 0.3); }
+.icon-tile.amber { background: rgba(245, 158, 11, 0.15); color: var(--gold-light); border-color: var(--gold-border); }
+.icon-tile.red { background: rgba(244, 63, 94, 0.15); color: #FCA5A5; border-color: rgba(244, 63, 94, 0.3); }
+.icon-tile.lg { width: 74px; height: 74px; border-radius: var(--radius); }
+
+/* ---------------------------------------------------------
+   Badges / Status Pills
+   --------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulseGlow 2s infinite;
+}
+.badge-success { background: var(--success-tint); color: #34D399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-warning { background: var(--warning-tint); color: var(--gold-light); border: 1px solid var(--gold-border); }
+.badge-danger { background: var(--danger-tint); color: #FCA5A5; border: 1px solid rgba(244,63,94,0.3); }
+.badge-neutral { background: rgba(255,255,255,0.08); color: var(--text-muted); border: 1px solid var(--border); }
+.badge-primary { background: rgba(212, 175, 55, 0.18); color: var(--gold-light); border: 1px solid var(--gold-border); }
+
+/* ---------------------------------------------------------
+   Frosted Royal Glass Bottom Dock Navigation
+   --------------------------------------------------------- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(17, 24, 39, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--gold-border);
+  display: flex;
+  align-items: stretch;
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.2s var(--ease);
+}
+.nav-item svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s var(--ease);
+}
+.nav-item.active {
+  color: var(--gold-light);
+}
+.nav-item.active svg {
+  transform: translateY(-2px) scale(1.1);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 36px;
+  height: 4px;
+  border-radius: 0 0 4px 4px;
+  background: var(--gold-gradient);
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.7);
+}
+.nav-item .nav-badge {
+  position: absolute;
+  top: 10px;
+  right: calc(50% - 18px);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid #111827;
+  animation: pulseGlow 1.8s infinite;
+}
+
+/* ---------------------------------------------------------
+   Forms & Controls
+   --------------------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label { font-size: 13px; font-weight: 700; color: var(--gold-light); }
+.field input[type="text"],
+.field input[type="search"],
+.field input[type="email"],
+.field input[type="password"],
+.field textarea,
+.field select {
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  font-size: 15.5px;
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(11, 15, 25, 0.9);
+  transition: all 0.2s var(--ease);
+  width: 100%;
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+/* ---------------------------------------------------------
+   PIN Keypad
+   --------------------------------------------------------- */
+.pin-dots { display: flex; justify-content: center; gap: 16px; margin: 24px 0; }
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-border);
+  transition: all 0.2s var(--ease);
+}
+.pin-dot.filled { background: var(--gold-primary); border-color: var(--gold-primary); transform: scale(1.15); box-shadow: 0 0 14px rgba(212,175,55,0.7); }
+.pin-dot.error { background: var(--danger); border-color: var(--danger); transform: scale(1.15); }
+
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 320px; margin: 0 auto; }
+.keypad-key {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--gold-border);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s var(--ease);
+}
+.keypad-key:hover { background: rgba(212, 175, 55, 0.2); color: var(--gold-light); }
+.keypad-key:active { background: var(--gold-primary); color: #0B0F19; transform: scale(0.92); }
+
+/* ---------------------------------------------------------
+   List Rows
+   --------------------------------------------------------- */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--royal-card);
+  border: 1px solid var(--gold-border);
+  transition: all 0.2s var(--ease);
+}
+.list-row:hover {
+  border-color: var(--gold-border-strong);
+  background: var(--royal-card-hover);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+/* ---------------------------------------------------------
+   Toasts & Overlay Sheets
+   --------------------------------------------------------- */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(7, 10, 16, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s var(--ease);
+}
+.overlay.show { opacity: 1; pointer-events: auto; }
+@media (min-width: 540px){ .overlay { align-items: center; } }
+
+.sheet {
+  background: var(--royal-surface);
+  border: 1px solid var(--gold-border-strong);
+  box-shadow: var(--shadow-lg), 0 0 50px rgba(212, 175, 55, 0.3);
+  width: min(100%, 680px);
+  max-width: var(--app-max-width);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 28px 28px calc(28px + env(safe-area-inset-bottom));
+  transform: translateY(24px);
+  transition: transform 0.25s var(--ease);
+}
+.overlay.show .sheet { transform: translateY(0); }
+@media (min-width: 540px){
+  .sheet { border-radius: var(--radius-lg); margin-bottom: 24px; }
+}
+.sheet-handle {
+  width: 40px; height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-border);
+  margin: 0 auto 20px;
+}
+
+.toast-wrap {
+  position: fixed;
+  top: 24px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  width: calc(100% - 36px);
+  max-width: calc(var(--app-max-width) - 36px);
+  display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  background: #111827;
+  color: #ffffff;
+  padding: 16px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14.5px;
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0;
+  transform: translateY(-14px);
+  transition: all 0.3s var(--ease);
+  border: 1px solid var(--gold-border-strong);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: #10B981; background: #064E3B; }
+.toast.error { border-color: #F43F5E; background: #881337; }

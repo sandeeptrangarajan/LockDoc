@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Terms &amp; Policy — LockDoc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .terms-body {
+      max-height: 340px;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .terms-body h4 {
+      font-family: var(--font-display);
+      color: var(--gold-deep);
+      margin: 18px 0 6px;
+    }
+    .terms-body h4:first-child { margin-top: 0; }
+    .terms-accept-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .terms-accept-row input[type="checkbox"] {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold-deep);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header" style="padding:20px 24px;">
+      <h1 style="font-size:18px;color:#fff;">📜 Terms &amp; Policy</h1>
+      <p style="font-size:12px;opacity:.7;color:#fff;">Please review before continuing to LockDoc</p>
+    </div>
+
+    <div class="app-content">
+      <div class="dashboard-card">
+        <div class="terms-body" id="terms-text">
+          <h4>1. What LockDoc does</h4>
+          <p>LockDoc lets you store documents in a private vault and share time-limited, read-only access to them via a scanned QR code. Shared views close automatically and are watermarked.</p>
+
+          <h4>2. Your storage limit</h4>
+          <p>Customer accounts include 3&nbsp;MB of total document storage. Delete existing documents to free up space if you reach this limit. Administrator accounts are not subject to this limit.</p>
+
+          <h4>3. What we store</h4>
+          <p>We store the documents you upload, your account details, and a record of access sessions (who viewed what, and when) so both sides have a record that a verification took place.</p>
+
+          <h4>4. What we don't do</h4>
+          <p>We don't sell your documents or data. We don't track your live location. A viewing session shows the document only for its countdown window, then closes automatically.</p>
+
+          <h4>5. Your responsibility</h4>
+          <p>You're responsible for the accuracy of documents you upload and for only sharing vault QR codes with people you intend to grant access to.</p>
+
+          <h4>6. Changes</h4>
+          <p>These terms may be updated as the app evolves. Continued use after an update means you accept the revised terms.</p>
+        </div>
+
+        <label class="terms-accept-row">
+          <input type="checkbox" id="terms-checkbox">
+          <span class="text-sm">I have read and agree to the Terms &amp; Policy above.</span>
+        </label>
+
+        <button id="terms-continue-btn" class="btn btn-primary mt-16" disabled>Agree &amp; Continue</button>
+        <p class="text-faint text-xs mt-8" id="terms-error" style="display:none;color:var(--danger);"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if (!isAuthenticated()) {
+      redirectToLogin();
+    }
+
+    const checkbox = document.getElementById('terms-checkbox');
+    const continueBtn = document.getElementById('terms-continue-btn');
+    const errorEl = document.getElementById('terms-error');
+
+    checkbox.addEventListener('change', () => {
+      continueBtn.disabled = !checkbox.checked;
+    });
+
+    continueBtn.addEventListener('click', async () => {
+      continueBtn.disabled = true;
+      continueBtn.textContent = 'Please wait…';
+      errorEl.style.display = 'none';
+
+      try {
+        const response = await fetch(API_BASE + '/api/auth/accept-terms', {
+          method: 'POST',
+          headers: authHeaders()
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || 'Could not record acceptance.');
+        }
+
+        const user = getStoredUser();
+        if (user) {
+          user.termsAccepted = true;
+          storeUser(user);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const destination = params.get('redirect') || 'index.html';
+        window.location.href = destination;
+      } catch (err) {
+        errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        continueBtn.disabled = false;
+        continueBtn.textContent = 'Agree & Continue';
+      }
+    });
+  </script>
+</body>
+</html>

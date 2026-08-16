@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Viewing Document — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/viewer.css">
+</head>
+<body>
+<div class="app viewer-app" id="viewer-root">
+
+  <div class="viewer-topbar">
+    <button class="close-btn" id="close-viewer-btn" aria-label="Close"><span class="i" id="close-icon"></span></button>
+    <div class="flex-1">
+      <p class="font-bold text-16">Secure Document Surface</p>
+      <p class="text-xs text-faint">Read Only &middot; Anti-Copy Protected &middot; Watermarked</p>
+    </div>
+    <span class="badge badge-primary">
+      <span class="i icon-sm" id="lock-icon"></span> Hardware Lock
+    </span>
+  </div>
+
+  <div class="viewer-doc-tabs" id="doc-tabs"></div>
+
+  <div class="viewer-stage" id="doc-stage">
+    <div class="viewer-locked-overlay hidden" id="locked-overlay">
+      <span class="icon-44" id="locked-icon"></span>
+      <p class="font-bold text-18" id="locked-message">Session Expired or Unavailable</p>
+      <a href="index.html" class="btn btn-primary btn-auto mt-4">Return to Vault Dashboard</a>
+    </div>
+  </div>
+
+  <div class="viewer-bottombar">
+    <div class="timer-strip" id="timer-strip">
+      <span class="icon-sm" id="timer-icon"></span>
+      <div class="track"><div class="fill" id="timer-fill" style="width:100%;"></div></div>
+      <span class="text-sm font-bold flex-none" id="timer-label">Auto-closes in 60s</span>
+    </div>
+    <p class="text-xs text-muted text-center" style="color:rgba(255,255,255,0.7);">
+      Authorized release for <strong id="viewer-requester-name" style="color:#fff;">—</strong> by <span id="viewer-owner-name" style="color:#fff;">—</span>. Session automatically self-destructs upon timer completion.
+    </p>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/connection.js"></script>
+<script src="js/watermark.js"></script>
+<script src="js/viewer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function(){
+  document.getElementById('close-icon').innerHTML = LD.icons.x;
+  document.getElementById('lock-icon').innerHTML = LD.icons.lock;
+  document.getElementById('timer-icon').innerHTML = LD.icons.clock;
+  document.getElementById('locked-icon').innerHTML = LD.icons.lock;
+
+  var ok = await LD.viewer.init();
+  if(!ok) return;
+
+  var docRequest = LD.viewer.docRequest;
+  var session = LD.viewer.session;
+  var doc = LD.viewer.doc;
+
+  if(docRequest && session){
+    document.getElementById('viewer-requester-name').textContent = session.requesterName || 'Requester';
+    document.getElementById('viewer-owner-name').textContent = session.ownerName || 'Owner';
+  }
+
+  LD.viewer.renderStage();
+
+  LD.viewer.applyGuards(document.getElementById('viewer-root'));
+
+  LD.viewer.startCountdown(function(){
+    LD.data.updateDocumentRequest(docRequest.requestId, {
+      accessToken: null,
+      accessExpiresAt: null,
+      status: 'expired'
+    });
+    LD.data.addAuditLog('session_expired', 'Viewing session expired', 'Session closed for document ' + (doc ? doc.name : 'unknown'));
+    LD.ui.toast('Viewing session closed', 'error');
+    setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+  });
+
+  document.getElementById('close-viewer-btn').addEventListener('click', function(){
+    LD.viewer.stop();
+    window.location.href = 'index.html';
+  });
+
+  window.addEventListener('beforeunload', LD.viewer.stop);
+});
+</script>
+</body>
+</html>

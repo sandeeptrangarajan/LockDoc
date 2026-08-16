@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Register - LockDoc Auth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header">
+      <div class="logo">LD</div>
+      <h1>Create Account</h1>
+      <p>Register to start using LockDoc securely</p>
+    </div>
+
+    <div class="app-content">
+
+      <!-- Step 1: Registration Form -->
+      <div id="step-form">
+        <div id="register-message" class="message-box"></div>
+
+        <div class="field">
+          <label for="reg-name">Full Name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Arjun Mehta" autocomplete="name">
+          <span class="error-text" id="reg-name-error"></span>
+        </div>
+
+        <div class="field">
+          <label for="reg-email">Email Address</label>
+          <input type="email" id="reg-email" placeholder="e.g. arjun@example.com" autocomplete="email">
+          <span class="error-text" id="reg-email-error"></span>
+        </div>
+
+        <div class="field">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" placeholder="Minimum 8 characters" autocomplete="new-password">
+          <span class="error-text" id="reg-password-error"></span>
+        </div>
+
+        <div class="field">
+          <label>I want to register as</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label class="checkbox-row" data-role="holder">
+              <input type="radio" name="role" value="holder">
+              <div>
+                <p class="font-semibold text-sm">Document Holder</p>
+                <p class="text-muted text-xs" style="font-size:11px;">Store &amp; share my documents</p>
+              </div>
+            </label>
+            <label class="checkbox-row" data-role="verifier">
+              <input type="radio" name="role" value="verifier">
+              <div>
+                <p class="font-semibold text-sm">Verifier</p>
+                <p class="text-muted text-xs" style="font-size:11px;">Verify documents shared by holders</p>
+              </div>
+            </label>
+            <label class="checkbox-row" data-role="organization">
+              <input type="radio" name="role" value="organization">
+              <div>
+                <p class="font-semibold text-sm">Organization</p>
+                <p class="text-muted text-xs" style="font-size:11px;">Institution that issues or verifies documents</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="send-otp-btn" disabled>
+          Send Verification Code
+        </button>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div id="step-otp" class="otp-section">
+        <div id="otp-message" class="message-box"></div>
+
+        <p style="text-align:center;font-size:14px;color:var(--text-muted);margin-bottom:4px;">
+          We've sent a verification code to
+        </p>
+        <p style="text-align:center;font-size:15px;font-weight:600;color:var(--text);margin-bottom:20px;" id="otp-email-display">—</p>
+
+        <div class="otp-input-row">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        </div>
+
+        <p class="otp-timer" id="otp-timer">Code expires in <strong>10:00</strong></p>
+
+        <button class="btn btn-primary" id="verify-otp-btn" disabled>
+          Verify &amp; Create Account
+        </button>
+
+        <div class="resend-row">
+          <button class="btn btn-outline btn-sm" id="resend-otp-btn" disabled>
+            Resend Code
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Sign in</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // ---- DOM References ----
+      var stepForm = document.getElementById('step-form');
+      var stepOtp = document.getElementById('step-otp');
+      var sendOtpBtn = document.getElementById('send-otp-btn');
+      var verifyOtpBtn = document.getElementById('verify-otp-btn');
+      var resendOtpBtn = document.getElementById('resend-otp-btn');
+      var regName = document.getElementById('reg-name');
+      var regEmail = document.getElementById('reg-email');
+      var regPassword = document.getElementById('reg-password');
+
+      var currentEmail = '';
+      var otpExpiresAt = 0;
+      var selectedRole = '';
+
+      // ---- Role Selection ----
+      document.querySelectorAll('[data-role]').forEach(function(row){
+        row.addEventListener('click', function(){
+          var radio = row.querySelector('input');
+          radio.checked = true;
+          selectedRole = radio.value;
+          document.querySelectorAll('[data-role]').forEach(function(r){ r.classList.remove('checked'); });
+          row.classList.add('checked');
+          validateForm();
+        });
+      });
+
+      // ---- Setup OTP input auto-tab ----
+      setupOTPInputs();
+
+      // ---- Form Validation ----
+      function validateForm() {
+        var name = regName.value.trim();
+        var email = regEmail.value.trim();
+        var password = regPassword.value;
+        var emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        var passwordValid = password.length >= 8;
+
+        document.getElementById('reg-name-error').textContent = '';
+        document.getElementById('reg-name-error').classList.remove('show');
+        document.getElementById('reg-email-error').textContent = '';
+        document.getElementById('reg-email-error').classList.remove('show');
+        document.getElementById('reg-password-error').textContent = '';
+        document.getElementById('reg-password-error').classList.remove('show');
+
+        var valid = true;
+        if (name.length < 2) {
+          document.getElementById('reg-name-error').textContent = 'Name must be at least 2 characters.';
+          document.getElementById('reg-name-error').classList.add('show');
+          valid = false;
+        }
+        if (!emailValid) {
+          document.getElementById('reg-email-error').textContent = 'Enter a valid email address.';
+          document.getElementById('reg-email-error').classList.add('show');
+          valid = false;
+        }
+        if (!passwordValid) {
+          document.getElementById('reg-password-error').textContent = 'Password must be at least 8 characters.';
+          document.getElementById('reg-password-error').classList.add('show');
+          valid = false;
+        }
+        if (!selectedRole) {
+          valid = false;
+        }
+
+        sendOtpBtn.disabled = !valid;
+      }
+
+      regName.addEventListener('input', validateForm);
+      regEmail.addEventListener('input', validateForm);
+      regPassword.addEventListener('input', validateForm);
+
+      // ---- Step 1: Send OTP (Registration) ----
+      sendOtpBtn.addEventListener('click', async function () {
+        var name = regName.value.trim();
+        var email = regEmail.value.trim();
+        var password = regPassword.value;
+
+        hideMessage('register-message');
+        setLoading('send-otp-btn', true, 'Sending...');
+
+        // Call the new /api/auth/register endpoint
+        var result = await apiRegister(name, email, password, selectedRole);
+
+        if (result.success) {
+          currentEmail = email;
+          otpExpiresAt = Date.now() + 10 * 60 * 1000;
+          document.getElementById('otp-email-display').textContent = email;
+
+          stepForm.style.display = 'none';
+          stepOtp.classList.add('show');
+
+          // In dev mode, OTP is returned in the response
+          if (result.devMode && result.otp) {
+            showToast(`DEV MODE: Your OTP is ${result.otp}`, 'info');
+            // Auto-fill the OTP input for testing convenience
+            setTimeout(function() {
+              document.querySelector('.otp-input-row input').value = result.otp;
+              // Trigger input events
+              var otpValue = result.otp;
+              var inputs = document.querySelectorAll('.otp-input-row input');
+              otpValue.split('').forEach(function(digit, i) {
+                if (inputs[i]) {
+                  inputs[i].value = digit;
+                  inputs[i].classList.add('filled');
+                }
+              });
+              verifyOtpBtn.disabled = false;
+            }, 500);
+          } else {
+            showToast('OTP sent successfully! Check your email.', 'success');
+          }
+          startOTPTimer(otpExpiresAt, 'otp-timer', 'resend-otp-btn');
+
+          // Focus first OTP input
+          document.querySelector('.otp-input-row input').focus();
+        } else {
+          showMessage('register-message', result.message || 'Failed to send OTP. Please try again.', 'error');
+          showToast(result.message || 'Failed to send OTP', 'error');
+        }
+
+        setLoading('send-otp-btn', false, 'Send Verification Code');
+      });
+
+      // ---- Step 2: Verify OTP ----
+      verifyOtpBtn.addEventListener('click', async function () {
+        var otp = getOTPValue();
+        if (otp.length !== 6) {
+          showToast('Please enter the complete 6-digit code.', 'error');
+          return;
+        }
+
+        hideMessage('otp-message');
+        setLoading('verify-otp-btn', true, 'Verifying...');
+
+        // Call the new /api/auth/verify-otp endpoint
+        var result = await apiVerifyOTP(currentEmail, otp);
+
+        if (result.success) {
+          showToast('Registration successful! Redirecting to login...', 'success');
+          setTimeout(function () {
+            window.location.href = 'login.html?registered=1';
+          }, 1500);
+        } else {
+          showMessage('otp-message', result.message || 'Verification failed. Please try again.', 'error');
+          showToast(result.message || 'Verification failed', 'error');
+          clearOTPInputs();
+        }
+
+        setLoading('verify-otp-btn', false, 'Verify &amp; Create Account');
+      });
+
+      // ---- OTP Input change -> Enable Verify button ----
+      document.querySelectorAll('.otp-input-row input').forEach(function(input){
+        input.addEventListener('input', function () {
+          var otp = getOTPValue();
+          verifyOtpBtn.disabled = otp.length !== 6;
+        });
+      });
+
+      // ---- Resend OTP ----
+      resendOtpBtn.addEventListener('click', async function () {
+        if (!currentEmail) {
+          showToast('Session expired. Please re-enter your email.', 'error');
+          return;
+        }
+
+        hideMessage('otp-message');
+        resendOtpBtn.disabled = true;
+        resendOtpBtn.textContent = 'Sending...';
+
+        // Use sendOTP endpoint for resend (type: registration)
+        var result = await apiSendOTP(currentEmail, 'registration');
+
+        if (result.success) {
+          otpExpiresAt = Date.now() + 10 * 60 * 1000;
+          showToast('New code sent! Check your email.', 'success');
+          startOTPTimer(otpExpiresAt, 'otp-timer', 'resend-otp-btn');
+          clearOTPInputs();
+        } else {
+          showMessage('otp-message', result.message || 'Failed to resend. Try again.', 'error');
+          showToast(result.message || 'Failed to resend OTP', 'error');
+          resendOtpBtn.disabled = false;
+          resendOtpBtn.textContent = 'Resend Code';
+        }
+      });
+
+      // ---- Initial validation ----
+      validateForm();
+    });
+  </script>
+</body>
+</html>
+

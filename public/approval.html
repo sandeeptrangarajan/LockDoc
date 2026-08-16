@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Approval Requests — LockDoc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header" style="padding:24px 28px;">
+      <h1 style="font-size:20px;color:#fff;">📥 Approval Requests</h1>
+      <p style="font-size:12px;opacity:.7;color:#fff;">Review who's asking to view your documents.</p>
+    </div>
+
+    <div class="app-content">
+      <div class="row-between" style="margin-bottom:16px;">
+        <a href="dashboard.html" class="btn btn-secondary btn-sm" style="width:auto;padding:8px 16px;">← Back</a>
+        <button class="btn btn-outline btn-sm" id="approval-refresh-btn" style="width:auto;padding:8px 16px;">Refresh</button>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Pending Requests</h3>
+        <div id="approval-list" class="mt-8"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="approval.js"></script>
+</body>
+</html>

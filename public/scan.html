@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Scan a QR — LockDoc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header" style="padding:24px 28px;">
+      <h1 style="font-size:20px;color:#fff;">📷 Scan a LockDoc QR</h1>
+      <p style="font-size:12px;opacity:.7;color:#fff;">Scan a folder's QR code to request access to its documents.</p>
+    </div>
+
+    <div class="app-content">
+      <div class="row-between" style="margin-bottom:16px;">
+        <a href="dashboard.html" class="btn btn-secondary btn-sm" style="width:auto;padding:8px 16px;">← Back</a>
+      </div>
+
+      <!-- Step 1: camera / manual scan -->
+      <div class="dashboard-card" id="scan-step-camera">
+        <h3>Camera</h3>
+        <div class="scan-frame mt-8">
+          <video id="scan-video" playsinline muted></video>
+        </div>
+        <canvas id="scan-canvas" style="display:none;"></canvas>
+        <p class="text-muted text-sm mt-16" id="scan-status">Point your camera at a LockDoc folder QR code.</p>
+
+        <div class="field mt-16">
+          <label for="scan-manual-input">Or paste a scanned code</label>
+          <input type="text" id="scan-manual-input" placeholder="Paste QR data here">
+        </div>
+        <button class="btn btn-outline" id="scan-manual-btn">Use Pasted Code</button>
+      </div>
+
+      <!-- Step 2: folder preview + request -->
+      <div class="dashboard-card" id="scan-step-preview" style="display:none;">
+        <h3 id="scan-vault-name">Folder</h3>
+        <p class="text-muted text-sm" id="scan-owner-name">—</p>
+
+        <div class="field mt-16">
+          <label for="scan-purpose-input">Reason for request (optional)</label>
+          <input type="text" id="scan-purpose-input" placeholder="e.g. Verifying identity for onboarding">
+        </div>
+
+        <h3 class="mt-16">Select documents</h3>
+        <div id="scan-doc-list"></div>
+
+        <button class="btn btn-primary mt-16" id="scan-request-btn">Send Request</button>
+        <button class="btn btn-outline mt-8" id="scan-again-btn">Scan a Different Code</button>
+      </div>
+
+      <!-- Step 3: waiting for approval -->
+      <div class="dashboard-card" id="scan-step-waiting" style="display:none; text-align:center;">
+        <div class="spinner dark" style="margin:0 auto 16px;"></div>
+        <h3>Waiting for approval</h3>
+        <p class="text-muted text-sm mt-8">The folder owner has been notified. This page will update automatically once they respond.</p>
+        <div id="scan-waiting-list" class="mt-16"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/jsQR.js"></script>
+  <script src="script.js"></script>
+  <script src="scan.js"></script>
+</body>
+</html>

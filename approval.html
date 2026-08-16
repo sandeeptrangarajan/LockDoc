@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Access Requests — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <button class="back-btn" data-back="index.html" aria-label="Back"><span class="i" id="back-icon"></span></button>
+    <h1>Access Requests &amp; Queue</h1>
+  </header>
+
+  <main class="app-main">
+    <div class="stack">
+
+      <!-- Connection Requests Section -->
+      <div>
+        <p class="section-title">Pending Connection Requests</p>
+        <div class="stack" id="connection-requests-list"></div>
+      </div>
+
+      <!-- Document Requests Section -->
+      <div>
+        <p class="section-title">Document Requests (PIN Verification Required)</p>
+        <div class="stack" id="document-requests-list"></div>
+      </div>
+
+      <!-- History -->
+      <div>
+        <p class="section-title">Request History</p>
+        <div class="stack" id="history-list"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="bottom-nav-slot" data-active="approval"></div>
+</div>
+
+<!-- PIN verification sheet -->
+<div class="overlay" id="pin-overlay">
+  <div class="sheet text-center" style="background:var(--bg);border-radius:28px 28px 0 0;box-shadow:var(--shadow-lg);">
+    <div class="sheet-handle"></div>
+    <div class="badge badge-primary mb-2">PIN AUTHENTICATION</div>
+    <h2 class="text-20 font-bold" id="pin-sheet-title">Verify Access PIN</h2>
+    <p class="text-muted text-sm mt-1">Enter your 6-digit LockDoc PIN to authorize this document release (Default: <strong>123456</strong>).</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="keypad" id="keypad"></div>
+    <button class="btn btn-outline mt-4" id="cancel-pin-btn">Cancel Verification</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/connection.js"></script>
+<script src="js/approval.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('back-icon').innerHTML = LD.icons.back;
+
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','back'];
+  document.getElementById('keypad').innerHTML = keys.map(k => {
+    if(k === '') return '<div></div>';
+    if(k === 'back') return '<button class="keypad-key action" data-key="back">' + LD.icons.back.replace('stroke-width="2.2"','stroke-width="2.5"') + '</button>';
+    return '<button class="keypad-key" data-key="' + k + '">' + k + '</button>';
+  }).join('');
+
+  document.querySelectorAll('.keypad-key').forEach(btn => {
+    btn.addEventListener('click', () => LD.approval.pressKey(btn.getAttribute('data-key')));
+  });
+  document.getElementById('cancel-pin-btn').addEventListener('click', LD.approval.closePinSheet);
+
+  async function render(){
+    var connectionRequests = LD.data.pendingConnectionRequests();
+    var documentRequests = LD.data.pendingDocumentRequests();
+
+    if(LD.data.isJwtAuthenticated()){
+      try {
+        const connResult = await LD.api.listConnectionRequests();
+        const docResult = await LD.api.listDocumentRequests();
+        if(connResult && connResult.success && Array.isArray(connResult.requests)){
+          connectionRequests = connResult.requests.map(r => {
+            r.requestId = r.requestId || r._id || r.id;
+            LD.data.updateConnectionRequest(r.requestId, r);
+            return r;
+          });
+        }
+        if(docResult && docResult.success && Array.isArray(docResult.requests)){
+          documentRequests = docResult.requests.map(r => {
+            r.requestId = r.requestId || r._id || r.id;
+            LD.data.updateDocumentRequest(r.requestId, r);
+            return r;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load backend requests:', err);
+      }
+    }
+
+    LD.approval.renderConnections('connection-requests-list', connectionRequests);
+    LD.approval.renderDocRequests('document-requests-list', documentRequests);
+
+    const allRequests = LD.data.connectionRequests();
+    const decided = allRequests.filter(s => s.status !== 'pending').slice(0, 10);
+
+    const historyList = document.getElementById('history-list');
+    if(decided.length === 0){
+      historyList.innerHTML = '<div class="empty-state"><div class="icon">' + LD.icons.clock + '</div><p class="text-sm font-semibold">No request history yet</p></div>';
+    } else {
+      historyList.innerHTML = decided.map(s => {
+        const accepted = s.status === 'accepted';
+        return '<div class="list-row">' +
+          '<div class="icon-tile ' + (accepted ? 'green' : 'red') + '">' + (accepted ? LD.icons.check : LD.icons.x) + '</div>' +
+          '<div class="flex-1"><p class="text-sm font-bold">' + s.requesterName + '</p><p class="text-muted text-xs">' + (accepted ? 'Accepted' : 'Declined') + ' &middot; ' + LD.ui.timeAgo(s.decidedAt || s.createdAt) + '</p></div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  LD.approval.onDecision = render;
+  render();
+});
+</script>
+</body>
+</html>

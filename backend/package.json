@@ -1,0 +1,30 @@
+{
+  "name": "lockdoc-auth-server",
+  "version": "2.0.0",
+  "description": "LockDoc Authentication Server with MongoDB Atlas + JWT + Mongoose",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "lockdoc",
+    "authentication",
+    "mongodb",
+    "jwt",
+    "express"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.6",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.1",
+    "qrcode": "^1.5.4"
+  }
+}

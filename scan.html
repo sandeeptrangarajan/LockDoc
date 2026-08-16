@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scan to Connect — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <button class="back-btn" data-back="index.html" aria-label="Back"><span class="i" id="back-icon"></span></button>
+    <h1>Scan Vault QR</h1>
+  </header>
+
+  <main class="app-main">
+    <div class="stack">
+
+      <p class="text-muted text-sm">Point your camera at a LockDoc QR code to request access to documents in that vault.</p>
+
+      <div class="card scan-card" style="border-radius:24px;border:2px solid rgba(79, 70, 229, 0.3);box-shadow:var(--shadow-md);">
+        <video id="scan-video" class="w-full h-full object-cover" hidden muted></video>
+        <canvas id="scan-canvas" hidden></canvas>
+
+        <div id="scan-placeholder" class="scan-placeholder" style="background:radial-gradient(circle at 50% 50%, #1E1B4B 0%, #0F172A 100%);">
+          <span class="icon-44 opacity-85 text-primary" id="camera-icon" style="width:52px;height:52px;"></span>
+          <p class="text-sm font-semibold opacity-85">Camera preview will appear here</p>
+          <button class="btn btn-primary btn-auto" id="start-scan-btn">Enable Camera Scanner</button>
+        </div>
+
+        <div id="scan-frame" class="scan-frame" style="border-color:var(--primary);box-shadow:0 0 20px rgba(79,70,229,0.8), 0 0 0 2000px rgba(15,23,42,0.65);"></div>
+      </div>
+
+      <p class="text-danger text-sm hidden" id="scan-error"></p>
+
+      <div class="row items-start gap-10">
+        <div class="hr-line"></div>
+        <span class="text-faint text-xs font-semibold">OR ENTER CODE MANUALLY</span>
+        <div class="hr-line"></div>
+      </div>
+
+      <div class="field">
+        <label for="manual-token">LockDoc QR code or link</label>
+        <input type="text" id="manual-token" placeholder="LD-xxxxxxxx or paste a share link">
+      </div>
+      <button class="btn btn-secondary" id="manual-connect-btn">Connect to Vault</button>
+
+    </div>
+  </main>
+
+  <div id="bottom-nav-slot" data-active="scan"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/scan.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('back-icon').innerHTML = LD.icons.back;
+  document.getElementById('camera-icon').innerHTML = LD.icons.camera;
+
+  function goToConnect(data){
+    if(data.isDirectUrl && data.url) {
+      window.location.href = data.url;
+      return;
+    }
+    window.location.href = 'connect.html?lockdocId=' + encodeURIComponent(data.lockdocId) + '&name=' + encodeURIComponent(data.name) + '&role=' + encodeURIComponent(data.role);
+  }
+
+  function handlePayload(raw){
+    const parsed = LD.scan.parsePayload(raw);
+    if(!parsed){
+      showError('That code isn\'t a recognized LockDoc code.');
+      return;
+    }
+    LD.data.addAuditLog('qr_scanned', 'QR code scanned', 'Scanned code for user: ' + parsed.name);
+    goToConnect(parsed);
+  }
+
+  function showError(msg){
+    const el = document.getElementById('scan-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  document.getElementById('start-scan-btn').addEventListener('click', function(){
+    document.getElementById('scan-error').style.display = 'none';
+    const video = document.getElementById('scan-video');
+    const canvas = document.getElementById('scan-canvas');
+
+    LD.scan.start(video, canvas, function(data){
+      handlePayload(data);
+    }, function(errMsg){
+      showError(errMsg);
+    });
+
+    document.getElementById('scan-placeholder').style.display = 'none';
+    video.style.display = 'block';
+    document.getElementById('scan-frame').style.display = 'block';
+  });
+
+  document.getElementById('manual-connect-btn').addEventListener('click', function(){
+    const val = document.getElementById('manual-token').value;
+    if(!val.trim()){ showError('Enter a code or link first.'); return; }
+    document.getElementById('scan-error').style.display = 'none';
+    handlePayload(val);
+  });
+
+  window.addEventListener('beforeunload', function(){ LD.scan.stop(); });
+});
+</script>
+</body>
+</html>

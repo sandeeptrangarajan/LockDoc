@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Connect — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <button class="back-btn" data-back="scan.html" aria-label="Back"><span class="i" id="back-icon"></span></button>
+    <h1>New Connection</h1>
+  </header>
+
+  <main class="app-main no-nav-padding">
+    <div class="stack" id="connect-view">
+
+      <div class="card text-center p-28-20">
+        <div class="icon-tile blue lg rounded-full mx-auto mb-4" id="vault-icon"></div>
+        <p class="text-muted text-xs text-uppercase letter-spacing-md font-semibold">Connecting to</p>
+        <h2 class="text-18 mt-1" id="target-name">LockDoc Vault</h2>
+        <p class="text-faint text-xs mt-8 break-all" id="target-token"></p>
+      </div>
+
+      <div class="field">
+        <label for="requester-name">Your name</label>
+        <input type="text" id="requester-name" placeholder="e.g. Priya Sharma">
+      </div>
+
+      <div class="field">
+        <label for="requester-purpose">Reason for request (optional)</label>
+        <textarea id="requester-purpose" placeholder="e.g. Verifying identity for loan application"></textarea>
+      </div>
+
+      <div class="card card-no-border">
+        <div class="row items-start gap-10">
+          <span class="icon-sm text-primary mt-1" id="note-icon"></span>
+          <p class="text-xs text-primary-dark leading-6">
+            The vault owner will be asked to approve this with their PIN before any document is shared.
+          </p>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="continue-btn">Continue to select documents</button>
+    </div>
+
+    <div class="stack text-center" id="invalid-view" hidden>
+      <div class="empty-state pt-40">
+        <div class="icon"><span id="invalid-icon"></span></div>
+        <p class="font-semibold">Invalid or missing code</p>
+        <p class="text-sm mt-4">This link doesn't contain a valid LockDoc token.</p>
+      </div>
+      <a href="scan.html" class="btn btn-primary mt-2">Scan again</a>
+    </div>
+  </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/connection.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('back-icon').innerHTML = LD.icons.back;
+  document.getElementById('vault-icon').innerHTML = LD.icons.shield;
+  document.getElementById('note-icon').innerHTML = LD.icons.shield;
+  document.getElementById('invalid-icon').innerHTML = LD.icons.x;
+
+  const params = new URLSearchParams(window.location.search);
+  let ownerLockdocId = params.get('lockdocId') || params.get('token') || LD.conn.getTokenFromUrl();
+  let ownerName = params.get('name') || 'LockDoc Vault';
+  let ownerRole = params.get('role') || 'holder';
+
+  if(!ownerLockdocId && LD.data.currentUser()){
+    const user = LD.data.currentUser();
+    ownerLockdocId = user.lockdocId || user.id;
+    ownerName = user.name || user.fullName || 'LockDoc Vault';
+  }
+
+  if(!ownerLockdocId){
+    ownerLockdocId = 'LD-VAULT-DEFAULT';
+  }
+
+  // Check if current user is trying to connect to their own QR
+  var currentUser = LD.data.currentUser();
+  var isSelf = currentUser && (currentUser.lockdocId === ownerLockdocId || currentUser.id === ownerLockdocId);
+
+  document.getElementById('target-name').textContent = ownerName + "'s Vault";
+  document.getElementById('target-token').textContent = ownerLockdocId;
+
+  document.getElementById('continue-btn').addEventListener('click', async function(){
+    var name = document.getElementById('requester-name').value.trim();
+    var purpose = document.getElementById('requester-purpose').value.trim();
+    if(!name){
+      LD.ui.toast('Please enter your name to continue', 'error');
+      return;
+    }
+
+    if(isSelf){
+      LD.ui.toast('Self-testing connection request', 'success');
+    }
+
+    // Create connection request
+    var connRequest = await LD.conn.createConnectionRequest(ownerLockdocId, ownerName, ownerRole, name, '', purpose);
+    if(connRequest && connRequest.requestId){
+      LD.ui.toast('Connection request sent!', 'success');
+      window.location.href = 'approval.html?requestId=' + encodeURIComponent(connRequest.requestId);
+    } else {
+      LD.ui.toast('Failed to send connection request', 'error');
+    }
+  });
+});
+</script>
+</body>
+</html>

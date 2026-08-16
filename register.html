@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Register — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="row flex-1 items-start gap-10">
+      <div class="icon-circle blue">
+        <span class="font-bold text-14">LD</span>
+      </div>
+      <div>
+        <h1 class="text-20">LockDoc</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main no-nav-padding">
+    <!-- Step 1: Registration form -->
+    <div class="stack" id="step-register">
+      <div class="text-center pt-20 mb-4">
+        <div class="icon-tile blue lg rounded-full mx-auto mb-4">
+          <span class="text-primary text-18" id="reg-lock-icon"></span>
+        </div>
+        <h2 class="text-20">Create your LockDoc account</h2>
+        <p class="text-muted text-sm mt-8">Register to start sharing documents securely.</p>
+      </div>
+
+      <div class="field">
+        <label for="reg-name">Full name</label>
+        <input type="text" id="reg-name" placeholder="e.g. Arjun Mehta" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="reg-email">Email address</label>
+        <input type="text" id="reg-email" placeholder="e.g. arjun@example.com" inputmode="email" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label>I want to register as</label>
+        <div class="stack" id="role-options">
+          <label class="checkbox-row" data-role="holder">
+            <input type="radio" name="role" value="holder">
+            <div>
+              <p class="font-semibold text-sm">Document Holder</p>
+              <p class="text-muted text-xs">Store &amp; share my documents with verifiers</p>
+            </div>
+          </label>
+          <label class="checkbox-row" data-role="verifier">
+            <input type="radio" name="role" value="verifier">
+            <div>
+              <p class="font-semibold text-sm">Verifier</p>
+              <p class="text-muted text-xs">Verify documents shared by holders</p>
+            </div>
+          </label>
+          <label class="checkbox-row" data-role="organization">
+            <input type="radio" name="role" value="organization">
+            <div>
+              <p class="font-semibold text-sm">Organization</p>
+              <p class="text-muted text-xs">Institution that issues or verifies documents</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="send-otp-btn" disabled>Send verification code</button>
+
+      <p class="text-xs text-faint text-center">
+        By continuing, you agree to share documents securely via LockDoc.
+      </p>
+    </div>
+
+    <!-- Step 2: OTP verification -->
+    <div class="stack text-center" id="step-otp" hidden>
+      <div class="icon-tile green lg rounded-full mx-auto mb-4">
+        <span class="text-success text-18" id="otp-mail-icon"></span>
+      </div>
+      <h2 class="text-18">Verify your email</h2>
+      <p class="text-muted text-sm mt-8">
+        We've sent a 6-digit code to<br>
+        <strong id="otp-email-display">—</strong>
+      </p>
+
+      <div class="pin-dots mt-6" id="otp-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+
+      <div class="field max-w-xs mx-auto">
+        <input type="text" id="otp-input" placeholder="Enter 6-digit code" inputmode="numeric" maxlength="6" class="pin-input">
+      </div>
+
+      <p class="text-xs text-muted mt-8" id="otp-timer-text">Code expires in <strong id="otp-timer">10:00</strong></p>
+
+      <button class="btn btn-primary mt-16" id="verify-otp-btn" disabled>Verify &amp; complete registration</button>
+
+      <button class="btn btn-outline btn-sm" id="resend-otp-btn" disabled>Resend code</button>
+
+      <button class="btn btn-secondary btn-sm mt-8" id="change-email-btn">Use a different email</button>
+    </div>
+
+    <!-- Step 3: Welcome / complete -->
+    <div class="stack text-center" id="step-complete" hidden>
+      <div class="icon-tile green lg rounded-full mx-auto mb-4">
+        <span class="text-success text-20" id="complete-check-icon"></span>
+      </div>
+      <h2 class="text-20">You're all set!</h2>
+      <p class="text-muted text-sm mt-8" id="complete-message">Your LockDoc vault is ready.</p>
+      <a href="index.html" class="btn btn-primary mt-24">Go to my vault</a>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  /* ---------- icon helpers ---------- */
+  document.getElementById('reg-lock-icon').innerHTML = LD.icons.lock;
+  document.getElementById('otp-mail-icon').innerHTML = LD.icons.id;
+  document.getElementById('complete-check-icon').innerHTML = LD.icons.check;
+
+  /* ---------- state ---------- */
+  var otpExpiryTimer = null;
+  var otpExpiresAt = 0;
+
+  /* ---------- role selection ---------- */
+  var selectedRole = '';
+
+  document.querySelectorAll('#role-options .checkbox-row').forEach(function(row){
+    row.addEventListener('click', function(){
+      var radio = row.querySelector('input');
+      radio.checked = true;
+      selectedRole = radio.value;
+      document.querySelectorAll('#role-options .checkbox-row').forEach(function(r){ r.classList.remove('checked'); });
+      row.classList.add('checked');
+      updateSendBtn();
+    });
+  });
+
+  /* ---------- form validation ---------- */
+  function getFormData(){
+    return {
+      name: document.getElementById('reg-name').value.trim(),
+      email: document.getElementById('reg-email').value.trim(),
+      role: selectedRole
+    };
+  }
+
+  function isValidEmail(email){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function updateSendBtn(){
+    var data = getFormData();
+    var valid = data.name.length >= 2 && isValidEmail(data.email) && data.role !== '';
+    document.getElementById('send-otp-btn').disabled = !valid;
+  }
+
+  document.getElementById('reg-name').addEventListener('input', updateSendBtn);
+  document.getElementById('reg-email').addEventListener('input', updateSendBtn);
+
+  /* ---------- send OTP ---------- */
+  document.getElementById('send-otp-btn').addEventListener('click', function(){
+    var data = getFormData();
+    if(!data.name || !isValidEmail(data.email) || !data.role){
+      LD.ui.toast('Please fill all fields correctly', 'error');
+      return;
+    }
+
+    var btn = document.getElementById('send-otp-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner dark" style="margin:0 auto;"></span> Sending...';
+
+    // Update user name in localStorage so emailjs.js can read it
+    LD.data.updateUser({ name: data.name, email: data.email, role: data.role, isVerified: false });
+
+    LD.email.sendOTP(data.email)
+      .then(function(result){
+        LD.ui.toast('Verification code sent!', 'success');
+        showOtpStep(data.email);
+      })
+      .catch(function(err){
+        LD.ui.toast(err.message || 'Failed to send OTP. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Send verification code';
+      });
+  });
+
+  /* ---------- show OTP step ---------- */
+  function showOtpStep(email){
+    document.getElementById('step-register').style.display = 'none';
+    document.getElementById('step-otp').style.display = 'flex';
+    document.getElementById('otp-email-display').textContent = email;
+
+    // Start expiry countdown
+    var otpData = LD.store.get(LD.KEYS.OTP, null);
+    if(otpData && otpData.expiresAt){
+      otpExpiresAt = otpData.expiresAt;
+      startOtpTimer();
+    }
+  }
+
+  /* ---------- OTP input ---------- */
+  var otpDigits = [];
+
+  document.getElementById('otp-input').addEventListener('input', function(){
+    var val = this.value.replace(/\D/g, '').slice(0, 6);
+    this.value = val;
+    otpDigits = val.split('');
+
+    var dots = document.querySelectorAll('#otp-dots .pin-dot');
+    dots.forEach(function(d, i){
+      d.classList.toggle('filled', i < otpDigits.length);
+      d.classList.remove('error');
+    });
+
+    document.getElementById('verify-otp-btn').disabled = otpDigits.length !== 6;
+  });
+
+  /* ---------- verify OTP ---------- */
+  document.getElementById('verify-otp-btn').addEventListener('click', function(){
+    var entered = document.getElementById('otp-input').value;
+    if(entered.length !== 6) return;
+
+    var btn = document.getElementById('verify-otp-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="margin:0 auto;"></span> Verifying...';
+
+    // Small delay to show spinner
+    setTimeout(function(){
+      var result = LD.email.verifyOTP(entered);
+
+      if(result.valid){
+        var data = getFormData();
+        LD.email.completeRegistration(data.name, data.email, data.role);
+        showCompleteStep();
+      } else {
+        LD.ui.toast(result.reason || 'Invalid code. Please try again.', 'error');
+        var dots = document.querySelectorAll('#otp-dots .pin-dot');
+        dots.forEach(function(d){ d.classList.add('error'); });
+        document.getElementById('otp-input').value = '';
+        otpDigits = [];
+        dots.forEach(function(d){ d.classList.remove('filled'); });
+        btn.disabled = true;
+        btn.textContent = 'Verify & complete registration';
+      }
+    }, 400);
+  });
+
+  /* ---------- resend OTP ---------- */
+  document.getElementById('resend-otp-btn').addEventListener('click', function(){
+    var btn = document.getElementById('resend-otp-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    LD.email.resendOTP()
+      .then(function(){
+        LD.ui.toast('New code sent!', 'success');
+        otpExpiresAt = (LD.store.get(LD.KEYS.OTP, null) || {}).expiresAt || Date.now() + 600000;
+        startOtpTimer();
+        btn.textContent = 'Resend code';
+        setTimeout(function(){ btn.disabled = false; }, 30000); // 30s cooldown
+      })
+      .catch(function(err){
+        LD.ui.toast(err.message || 'Failed to resend. Try again.', 'error');
+        btn.textContent = 'Resend code';
+        btn.disabled = false;
+      });
+  });
+
+  /* ---------- change email / go back ---------- */
+  document.getElementById('change-email-btn').addEventListener('click', function(){
+    if(otpExpiryTimer) clearInterval(otpExpiryTimer);
+    document.getElementById('step-otp').style.display = 'none';
+    document.getElementById('step-register').style.display = 'flex';
+    document.getElementById('otp-input').value = '';
+    otpDigits = [];
+    document.querySelectorAll('#otp-dots .pin-dot').forEach(function(d){ d.classList.remove('filled', 'error'); });
+    document.getElementById('send-otp-btn').disabled = false;
+    document.getElementById('send-otp-btn').textContent = 'Send verification code';
+  });
+
+  /* ---------- OTP expiry timer ---------- */
+  function startOtpTimer(){
+    if(otpExpiryTimer) clearInterval(otpExpiryTimer);
+
+    function tick(){
+      var diff = Math.max(0, Math.floor((otpExpiresAt - Date.now()) / 1000));
+      var mins = Math.floor(diff / 60);
+      var secs = diff % 60;
+      var timerEl = document.getElementById('otp-timer');
+      timerEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+      if(diff <= 0){
+        clearInterval(otpExpiryTimer);
+        document.getElementById('otp-timer-text').innerHTML = 'Code expired. <button class="btn btn-sm btn-secondary" id="expired-resend-btn">Resend</button>';
+        document.getElementById('verify-otp-btn').disabled = true;
+        document.getElementById('otp-input').disabled = true;
+
+        document.getElementById('expired-resend-btn').addEventListener('click', function(){
+          document.getElementById('otp-input').disabled = false;
+          LD.email.resendOTP().then(function(){
+            LD.ui.toast('New code sent!', 'success');
+            otpExpiresAt = (LD.store.get(LD.KEYS.OTP, null) || {}).expiresAt || Date.now() + 600000;
+            startOtpTimer();
+          }).catch(function(err){
+            LD.ui.toast(err.message || 'Resend failed', 'error');
+          });
+        });
+      }
+    }
+
+    tick();
+    otpExpiryTimer = setInterval(tick, 1000);
+
+    // Enable resend button after 30s
+    document.getElementById('resend-otp-btn').disabled = true;
+    setTimeout(function(){
+      document.getElementById('resend-otp-btn').disabled = false;
+    }, 30000);
+  }
+
+  /* ---------- show complete step ---------- */
+  function showCompleteStep(){
+    if(otpExpiryTimer) clearInterval(otpExpiryTimer);
+    document.getElementById('step-otp').style.display = 'none';
+    document.getElementById('step-complete').style.display = 'flex';
+    var user = LD.data.user();
+    document.getElementById('complete-message').textContent =
+      'Your ' + user.role.replace('_', ' ') + ' account has been verified. Welcome to LockDoc!';
+  }
+
+  /* ---------- if already verified, redirect ---------- */
+  if(LD.email.isVerified()){
+    window.location.href = 'index.html';
+  }
+
+  /* ---------- handle enter key ---------- */
+  document.getElementById('otp-input').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && otpDigits.length === 6){
+      document.getElementById('verify-otp-btn').click();
+    }
+  });
+});
+</script>
+</body>
+</html>
+

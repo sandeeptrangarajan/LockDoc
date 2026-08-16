@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>My Vault — LockDoc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header" style="padding:24px 28px;">
+      <h1 style="font-size:20px;color:#fff;">🔐 LockDoc Vault</h1>
+      <p style="font-size:12px;opacity:.7;color:#fff;">Secure upload and vault management for your documents.</p>
+    </div>
+
+    <div class="app-content">
+      <div class="dashboard-header">
+        <div class="dashboard-user">
+          <div class="dashboard-avatar" id="vault-user-avatar">—</div>
+          <div class="dashboard-user-info">
+            <h2 id="vault-user-name">—</h2>
+            <p id="vault-user-email">—</p>
+          </div>
+        </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <a href="dashboard.html" class="btn btn-secondary btn-sm" style="padding:8px 16px;">Back</a>
+            <button class="btn btn-outline btn-sm" id="vault-logout-btn" style="width:auto;padding:8px 16px;">Logout</button>
+          </div>
+          <p id="vault-profile-role">—</p>
+        </div>
+
+        <div class="dashboard-card" style="background:var(--primary-tint);border:1px solid var(--primary-light);">
+          <h3>Vault Status</h3>
+          <p id="vault-status-count">0 Documents</p>
+          <p id="vault-status-message">No documents uploaded yet.</p>
+          <button class="btn btn-primary" id="browse-documents-btn">Browse Documents</button>
+        </div>
+
+        <div class="dashboard-card" id="upload-preview-card" style="display:none;">
+          <h3>Selected Documents</h3>
+          <div id="selected-documents-list"></div>
+          <div class="field">
+            <label for="vault-name-input">Vault Name</label>
+            <input type="text" id="vault-name-input" placeholder="e.g. Personal Documents">
+          </div>
+          <div class="field">
+            <label for="vault-category-select">Category</label>
+            <select id="vault-category-select">
+              <option value="Identity">Identity</option>
+              <option value="Education">Education</option>
+              <option value="Medical">Medical</option>
+              <option value="Financial">Financial</option>
+              <option value="Employment">Employment</option>
+              <option value="Personal">Personal</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="upload-documents-btn">Upload Documents</button>
+        </div>
+
+        <div class="dashboard-card" id="vault-list-card">
+          <h3>My Vaults</h3>
+          <div id="vault-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="vault-file-input" multiple style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,.pptx" webkitdirectory directory>
+
+  <script src="script.js"></script>
+  <script src="vault.js"></script>
+</body>
+</html>

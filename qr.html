@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title id="page-title">My QR — LockDoc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <button class="back-btn" data-back="index.html" aria-label="Back"><span class="i"></span></button>
+    <h1 id="header-title">My Permanent QR Code</h1>
+  </header>
+
+  <main class="app-main">
+    <div class="stack">
+
+      <p class="text-muted text-sm text-center" id="intro-text">
+        This is your permanent LockDoc code. Anyone who scans it can request access to your documents —
+        nothing is shared until you approve it with your PIN.
+      </p>
+
+      <div class="card text-center p-28-20" style="background:linear-gradient(180deg, #ffffff 0%, #F5F3FF 100%);">
+        <div class="row justify-center gap-8 mb-4">
+          <span class="badge badge-success"><span class="badge-dot"></span> Permanent Code</span>
+          <span class="badge hidden" id="risk-badge"></span>
+        </div>
+        <div id="qr-canvas" class="flex-center min-h-220 p-20" style="background:#fff;border-radius:18px;box-shadow:var(--shadow-sm);border:2px solid var(--primary-light);max-width:240px;margin:0 auto;"></div>
+        <p class="text-xs text-faint mt-4 break-all letter-spacing-xs" id="qr-token-display"></p>
+      </div>
+
+      <div class="card row gap-12">
+        <div class="icon-tile blue"><span class="i"></span></div>
+        <div style="flex:1;">
+          <p class="font-bold text-15" id="qr-owner-name">—</p>
+          <p class="text-muted text-xs" id="qr-owner-sub">Vault Owner Identity</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <button class="btn btn-primary" id="share-btn">Share Code Link</button>
+        <button class="btn btn-secondary" id="regenerate-btn">Regenerate Code</button>
+      </div>
+
+      <div class="card" style="background:var(--primary-light);border:1px solid rgba(79, 70, 229, 0.2);">
+        <div class="row" style="align-items:flex-start;gap:12px;">
+          <span style="width:20px;height:20px;color:var(--primary);flex-shrink:0;margin-top:2px;" id="info-shield"></span>
+          <p class="text-xs" style="color:var(--primary-darker);line-height:1.5;font-weight:600;">
+            This QR code never expires, but you stay in full control — every access request needs your explicit
+            PIN-verified approval before any document becomes viewable.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="bottom-nav-slot" data-active="qr"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/emailjs.js"></script>
+<script src="js/qr.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelector('[data-back] .i, .back-btn .i').innerHTML = LD.icons.back;
+  document.getElementById('info-shield').innerHTML = LD.icons.shield;
+
+  const params = new URLSearchParams(window.location.search);
+  const catId = params.get('cat');
+  const category = catId ? (LD.data.categories().find(c => c.id === catId) || null) : null;
+  const isFolderMode = !!category;
+
+  let token;
+
+  if(isFolderMode){
+    document.getElementById('page-title').textContent = category.name + ' QR — LockDoc';
+    document.getElementById('header-title').textContent = category.name + ' QR';
+    document.getElementById('intro-text').textContent =
+      'This is the permanent QR for your "' + category.name + '" folder. Anyone who scans it can request ' +
+      'documents from this folder only — nothing is shared until you approve it.';
+    document.getElementById('qr-owner-name').textContent = category.name;
+    document.getElementById('qr-owner-sub').textContent = 'Folder — risk level: ' + (category.riskLevel || 'low');
+
+    const riskBadge = document.getElementById('risk-badge');
+    const riskClass = category.riskLevel === 'high' ? 'badge-danger' : category.riskLevel === 'medium' ? 'badge-warning' : 'badge-neutral';
+    riskBadge.className = 'badge ' + riskClass;
+    riskBadge.style.display = 'inline-flex';
+    riskBadge.textContent = (category.riskLevel || 'low').toUpperCase() + ' RISK';
+
+    token = LD.qr.renderForCategory('qr-canvas', category.id);
+  } else {
+    token = LD.qr.render('qr-canvas');
+    const authUser = LD.data.currentUser();
+    document.getElementById('qr-owner-name').textContent = authUser ? (authUser.name || authUser.fullName || authUser.email) : LD.data.user().name;
+  }
+
+  document.getElementById('qr-token-display').textContent = token;
+  document.querySelectorAll('.icon-tile.blue .i')[0].innerHTML = LD.icons.id;
+
+  document.getElementById('regenerate-btn').addEventListener('click', function(){
+    const msg = isFolderMode
+      ? 'Regenerating will invalidate the current QR for "' + category.name + '". Anyone with the old code will no longer be able to request from this folder. Continue?'
+      : 'Regenerating will invalidate your current QR code. Anyone with the old code will no longer be able to connect. Continue?';
+
+    if(confirm(msg)){
+      if(isFolderMode){
+        LD.data.regenerateCategoryQrToken(category.id);
+        const rendered = LD.qr.renderForCategory('qr-canvas', category.id);
+        document.getElementById('qr-token-display').textContent = rendered;
+      } else {
+        LD.qr.regenerate();
+        const rendered = LD.qr.render('qr-canvas');
+        document.getElementById('qr-token-display').textContent = rendered;
+      }
+      LD.ui.toast('New QR code generated', 'success');
+    }
+  });
+
+  document.getElementById('share-btn').addEventListener('click', function(){
+    const shareToken = isFolderMode ? token : LD.data.qrToken();
+    const base = window.location.origin + window.location.pathname.replace('qr.html', 'connect.html');
+    const url = isFolderMode
+      ? base + '?token=' + encodeURIComponent(shareToken) + '&cat=' + encodeURIComponent(category.id)
+      : base + '?token=' + encodeURIComponent(shareToken);
+
+    if(navigator.share){
+      navigator.share({ title: 'Connect on LockDoc', url: url }).catch(()=>{});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(url).then(() => LD.ui.toast('Link copied to clipboard', 'success'));
+    } else {
+      LD.ui.toast('Copy not supported on this browser');
+    }
+  });
+});
+</script>
+</body>
+</html>

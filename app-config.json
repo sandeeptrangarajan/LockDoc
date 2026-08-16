@@ -1,0 +1,28 @@
+{
+  "appName": "LockDoc",
+  "version": "1.0.0",
+  "description": "Secure, QR-based document sharing vault with PIN-verified approvals and a watermarked, time-limited viewer.",
+  "theme": {
+    "primaryColor": "#2563EB",
+    "background": "#FFFFFF",
+    "borderRadius": "16px",
+    "font": "Inter"
+  },
+  "security": {
+    "verificationPin": "123456",
+    "pinLength": 6,
+    "viewSessionSeconds": 60,
+    "accessValidMinutes": 10,
+    "qrCodeExpiry": "never"
+  },
+  "storageKeys": {
+    "user": "lockdoc_user",
+    "qrToken": "lockdoc_qr_token",
+    "documents": "lockdoc_documents",
+    "categories": "lockdoc_categories",
+    "sessions": "lockdoc_sessions",
+    "activity": "lockdoc_activity",
+    "settings": "lockdoc_settings"
+  },
+  "_note": "This file is documentation only. Live values are defined in js/storage.js under LD.CONFIG — edit there to actually change app behavior."
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dashboard - LockDoc Auth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header" style="padding:24px 28px;">
+      <h1 style="font-size:20px;color:#fff;">🔐 LockDoc Auth</h1>
+      <p style="font-size:12px;opacity:.7;color:#fff;">JWT + MongoDB Authentication</p>
+    </div>
+
+    <div class="app-content">
+
+      <div class="dashboard-header">
+        <div class="dashboard-user">
+          <div class="dashboard-avatar" id="user-avatar">—</div>
+          <div class="dashboard-user-info">
+            <h2 id="user-name">—</h2>
+            <p id="user-email">—</p>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="logout-btn" style="width:auto;padding:8px 16px;">
+          Logout
+        </button>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="dashboard-card">
+          <h3>Account Status</h3>
+          <p style="margin-top:4px;">
+            <span class="badge">✓ Verified</span>
+          </p>
+        </div>
+
+        <div class="dashboard-card">
+          <h3>Full Name</h3>
+          <p id="dashboard-name">—</p>
+        </div>
+
+        <div class="dashboard-card">
+          <h3>Email Address</h3>
+          <p id="dashboard-email">—</p>
+        </div>
+
+        <div class="dashboard-card">
+          <h3>LockDoc ID</h3>
+          <p id="dashboard-lockdocid" style="font-family:monospace;">—</p>
+        </div>
+
+        <div class="dashboard-card">
+          <h3>Account Type</h3>
+          <p id="dashboard-role">—</p>
+        </div>
+
+        <div class="dashboard-card" style="background:var(--primary-tint);border:1px solid var(--primary-light);">
+          <p style="font-size:13px;color:var(--primary-dark);line-height:1.6;">
+            ✅ You are authenticated via MongoDB Atlas + JWT.<br>
+            <span style="color:var(--text-muted);font-size:12px;">
+              Your session is secured with a JWT token stored in your browser.
+            </span>
+          </p>
+        </div>
+
+        <div class="dashboard-actions">
+          <a href="vault.html" class="btn btn-primary">Open Vault</a>
+          <a href="scan.html" class="btn btn-secondary">Scan a QR</a>
+          <a href="approval.html" class="btn btn-outline">Approval Requests</a>
+          <button class="btn btn-outline" id="logout-btn-2">Logout</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      // ---- Check authentication ----
+      if (!isAuthenticated()) {
+        redirectToLogin();
+        return;
+      }
+
+      var user = getStoredUser();
+
+      // Try to fetch fresh profile from server
+      try {
+        var profileResult = await apiGetProfile();
+        if (profileResult.success) {
+          user = profileResult.user;
+          // Update stored user with fresh data
+          storeUser({
+            id: user.id,
+            name: user.fullName,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role,
+            lockdocId: user.lockdocId,
+            isVerified: user.isVerified,
+            lastLogin: user.lastLogin
+          });
+        }
+      } catch (e) {
+        // Fall back to stored user if API fails
+        console.log('Using cached profile data');
+      }
+
+      // ---- Populate dashboard ----
+      var initials = (user.fullName || user.name || '').split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0, 2) || 'U';
+      document.getElementById('user-avatar').textContent = initials;
+      document.getElementById('user-name').textContent = user.fullName || user.name || 'User';
+      document.getElementById('user-email').textContent = user.email || '—';
+      document.getElementById('dashboard-name').textContent = user.fullName || user.name || '—';
+      document.getElementById('dashboard-email').textContent = user.email || '—';
+      document.getElementById('dashboard-lockdocid').textContent = user.lockdocId || '—';
+      document.getElementById('dashboard-role').textContent = user.role || '—';
+
+      // ---- Logout function ----
+      function logout() {
+        // Call logout API (non-blocking)
+        apiLogout().catch(function(){});
+        // Clear local storage
+        removeToken();
+        removeStoredUser();
+        window.location.href = 'login.html';
+      }
+
+      document.getElementById('logout-btn').addEventListener('click', logout);
+      document.getElementById('logout-btn-2').addEventListener('click', logout);
+    });
+  </script>
+</body>
+</html>
+

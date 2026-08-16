@@ -1,0 +1,17 @@
+{
+  "_note": "Documents the shape of objects stored under localStorage key 'lockdoc_sessions'. Starts empty; populated at runtime by js/connection.js.",
+  "example": [
+    {
+      "id": "sess_l3k2j1abc",
+      "token": "LD-l3k2j1xyz98ab",
+      "requesterName": "Priya Sharma",
+      "purpose": "Verifying identity for loan application",
+      "documentIds": ["doc_aadhaar", "doc_pan"],
+      "status": "approved",
+      "createdAt": "2026-07-21T09:12:00.000Z",
+      "decidedAt": "2026-07-21T09:13:04.000Z",
+      "accessExpiresAt": "2026-07-21T09:23:04.000Z"
+    }
+  ],
+  "statusValues": ["pending", "approved", "denied", "expired"]
+}

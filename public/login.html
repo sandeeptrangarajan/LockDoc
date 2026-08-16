@@ -1,0 +1,159 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Login - LockDoc Auth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="app-header">
+      <div class="logo">LD</div>
+      <h1>Welcome Back</h1>
+      <p>Sign in to your LockDoc account</p>
+    </div>
+
+    <div class="app-content">
+
+      <div id="login-message" class="message-box"></div>
+
+      <div class="field">
+        <label for="login-email">Email Address</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+        <span class="error-text" id="login-email-error"></span>
+      </div>
+
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password">
+        <span class="error-text" id="login-password-error"></span>
+      </div>
+
+      <button class="btn btn-primary" id="login-btn" disabled>
+        Sign In
+      </button>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="register.html">Create one</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const loginEmail = document.getElementById('login-email');
+      const loginPassword = document.getElementById('login-password');
+      const loginBtn = document.getElementById('login-btn');
+
+      // ---- Check for success message from registration ----
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('registered') === '1') {
+        showMessage('login-message', 'Registration successful! You can now sign in.', 'success');
+        showToast('Account created successfully!', 'success');
+      }
+
+      // ---- Form Validation ----
+      function validateForm() {
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value;
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        document.getElementById('login-email-error').textContent = '';
+        document.getElementById('login-email-error').classList.remove('show');
+        document.getElementById('login-password-error').textContent = '';
+        document.getElementById('login-password-error').classList.remove('show');
+
+        let valid = true;
+        if (!emailValid) {
+          document.getElementById('login-email-error').textContent = 'Enter a valid email address.';
+          document.getElementById('login-email-error').classList.add('show');
+          valid = false;
+        }
+        if (password.length === 0) {
+          document.getElementById('login-password-error').textContent = 'Password is required.';
+          document.getElementById('login-password-error').classList.add('show');
+          valid = false;
+        }
+
+        loginBtn.disabled = !valid;
+      }
+
+      loginEmail.addEventListener('input', validateForm);
+      loginPassword.addEventListener('input', validateForm);
+
+      // ---- Handle Enter key ----
+      loginPassword.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !loginBtn.disabled) {
+          loginBtn.click();
+        }
+      });
+
+      // ---- Login ----
+      loginBtn.addEventListener('click', async function () {
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value;
+
+        hideMessage('login-message');
+        setLoading('login-btn', true, 'Signing in...');
+
+        const result = await apiLogin(email, password);
+
+        if (result.success) {
+          // Store JWT token
+          setToken(result.token);
+
+          // Store user data in localStorage for main LockDoc app
+          const userData = result.user;
+          const userForStorage = {
+            id: userData.id,
+            name: userData.fullName,
+            fullName: userData.fullName,
+            email: userData.email,
+            role: userData.role,
+            lockdocId: userData.lockdocId || 'LD-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase(),
+            isVerified: userData.isVerified,
+            lastLogin: userData.lastLogin,
+            isAdmin: !!userData.isAdmin,
+            termsAccepted: !!userData.termsAccepted
+          };
+          storeUser(userForStorage);
+
+          // Also sync with LD.store for main app compatibility
+          if (window.LD && LD.data) {
+            LD.data.setCurrentUser(userForStorage);
+          }
+
+          showToast('Login successful! Redirecting...', 'success');
+          const params = new URLSearchParams(window.location.search);
+          const redirectTarget = params.get('redirect');
+          const destination = (redirectTarget && !redirectTarget.startsWith('http') && !redirectTarget.includes('//'))
+            ? redirectTarget
+            : 'index.html';
+
+          const finalDestination = (!userForStorage.isAdmin && !userForStorage.termsAccepted)
+            ? 'terms.html?redirect=' + encodeURIComponent(destination)
+            : destination;
+
+          setTimeout(() => {
+            window.location.href = finalDestination;
+          }, 800);
+        } else {
+          showMessage('login-message', result.message || 'Login failed. Please try again.', 'error');
+          showToast(result.message || 'Login failed', 'error');
+        }
+
+        setLoading('login-btn', false, 'Sign In');
+      });
+
+      // ---- Initial validation ----
+      validateForm();
+    });
+  </script>
+</body>
+</html>
+
