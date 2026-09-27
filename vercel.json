@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": "",
-  "outputDirectory": ".",
-  "installCommand": "npm install",
   "functions": {
     "api/index.js": {
       "includeFiles": "backend/**",
