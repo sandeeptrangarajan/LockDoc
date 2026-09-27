@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>LockDoc — Imperial Royal Document Vault</title>
+<title>LockDoc — Quantum-Safe PIN Document Vault</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   .search-bar-input {
-    background: rgba(17, 24, 39, 0.9);
-    border: 1px solid var(--gold-border);
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
     border-radius: var(--radius-pill);
     padding: 10px 18px;
     font-size: 14px;
@@ -22,16 +22,16 @@
     transition: all 0.22s var(--ease);
   }
   .search-bar-input:focus {
-    width: 270px;
-    background: #1F2937;
-    border-color: var(--gold-primary);
-    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+    width: 260px;
+    background: #FFFFFF;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
   }
   .view-mode-btn {
     padding: 7px 14px;
     border-radius: 10px;
-    border: 1px solid var(--gold-border);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #CBD5E1;
+    background: #F8FAFC;
     cursor: pointer;
     font-size: 12.5px;
     font-weight: 700;
@@ -39,59 +39,59 @@
     transition: all 0.2s var(--ease);
   }
   .view-mode-btn.active {
-    background: var(--gold-gradient);
-    color: #0B0F19;
+    background: var(--primary-gradient);
+    color: #FFFFFF;
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.25);
   }
   .storage-bar-wrap {
     width: 140px;
     height: 7px;
     border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--gold-border);
+    background: #E2E8F0;
+    border: 1px solid #CBD5E1;
     overflow: hidden;
   }
   .storage-bar-fill {
     height: 100%;
-    background: var(--gold-gradient);
+    background: var(--primary-gradient);
     border-radius: var(--radius-pill);
     transition: width 0.3s var(--ease);
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
   }
   .dropzone {
-    border: 2px dashed var(--gold-primary);
+    border: 2px dashed #CBD5E1;
     border-radius: var(--radius);
     padding: 32px 20px;
     text-align: center;
-    background: rgba(212, 175, 55, 0.08);
+    background: #F8FAFC;
     cursor: pointer;
     transition: all 0.2s var(--ease);
   }
   .dropzone:hover {
-    background: rgba(212, 175, 55, 0.18);
-    border-color: #FFD700;
+    background: #F0F9FF;
+    border-color: var(--cyan);
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.1);
   }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Royal Imperial Header -->
+  <!-- Cyberpunk Top HUD Header -->
   <header class="app-header">
     <div class="row flex-1 items-start gap-12">
-      <div class="icon-circle" style="background:var(--gold-gradient);color:#0B0F19;font-weight:800;font-size:18px;box-shadow:0 0 15px rgba(212,175,55,0.5);">
-        👑
+      <div class="icon-circle" style="background:var(--primary-gradient);color:#FFFFFF;font-weight:900;font-size:16px;box-shadow:0 2px 10px rgba(2,132,199,0.3);border:none;">
+        LD
       </div>
       <div>
         <h1 class="text-20">LockDoc</h1>
-        <p class="text-xs text-gold" style="line-height:1;font-weight:700;">IMPERIAL ROYAL VAULT</p>
+        <p class="text-xs text-cyan font-mono" style="line-height:1;font-weight:700;letter-spacing:0.06em;">APARTMENT GATE IDENTITY SENTINEL</p>
       </div>
     </div>
 
     <!-- Controls -->
     <div class="row gap-10">
-      <input type="text" id="dashboard-search-input" class="search-bar-input" placeholder="Search royal documents...">
+      <input type="text" id="dashboard-search-input" class="search-bar-input" placeholder="Search resident vault...">
       <button class="btn btn-primary btn-sm" id="open-upload-modal-btn">+ Upload</button>
       <a href="approval.html" class="back-btn" aria-label="Requests" id="header-bell-btn" title="Pending Approvals"></a>
       <a href="public/login.html" class="back-btn" aria-label="Account" id="header-user-btn" title="Account Login">
@@ -104,22 +104,22 @@
   <main class="app-main">
     <div class="stack">
 
-      <!-- User Welcome & Gold Storage Bar -->
-      <div class="card p-24" style="background:linear-gradient(135deg, rgba(30,30,56,0.9) 0%, rgba(17,24,39,0.95) 100%);">
+      <!-- User Welcome & Storage Bar -->
+      <div class="card p-24">
         <div class="row-between">
           <div class="row gap-16">
-            <div id="user-avatar" class="icon-tile lg animated-pulse" style="border-radius:50%;font-weight:800;font-size:22px;box-shadow:0 0 25px rgba(212,175,55,0.5);background:var(--gold-gradient);color:#0B0F19;border:2px solid #FFD700;">—</div>
+            <div id="user-avatar" class="icon-tile lg animated-pulse" style="border-radius:50%;font-weight:800;font-size:22px;box-shadow:0 4px 14px rgba(2,132,199,0.25);background:var(--primary-gradient);color:#FFFFFF;border:2px solid #BAE6FD;">—</div>
             <div>
-              <div class="badge badge-primary mb-1">👑 ROYAL VAULT IDENTITY</div>
-              <h1 style="font-size:24px;font-weight:800;background:var(--gold-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="user-name">—</h1>
-              <p class="text-xs text-muted mt-1" id="user-email-role">—</p>
+              <div class="badge badge-primary mb-1">⚡ SKYLINE HEIGHTS RESIDENT PORTAL</div>
+              <h1 style="font-size:24px;font-weight:800;background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;" id="user-name">—</h1>
+              <p class="text-xs text-muted mt-1 font-mono" id="user-email-role">—</p>
             </div>
           </div>
 
           <!-- Storage Meter -->
           <div class="text-right">
             <div class="row gap-8 justify-center mb-1">
-              <span class="text-xs font-bold text-gold" id="storage-label">0 MB / 3 MB Used</span>
+              <span class="text-xs font-bold text-cyan font-mono" id="storage-label">0 MB / 3 MB Used</span>
             </div>
             <div class="storage-bar-wrap">
               <div class="storage-bar-fill" id="storage-bar" style="width: 0%;"></div>
@@ -128,60 +128,104 @@
         </div>
       </div>
 
+      <!-- Blockchain Integrity & Tamper Sentinel Card -->
+      <div class="card p-20" style="background:#FFFFFF;border:1px solid #E2E8F0;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+        <div class="row-between mb-3">
+          <div class="row gap-10">
+            <span style="font-size:22px;">🛡️</span>
+            <div>
+              <h3 class="text-16 font-extrabold text-white">Cryptographic Blockchain Sentinel</h3>
+              <p class="text-xs text-muted">Immutable SHA-256 ledger for apartment checkpoint verification &amp; instant tamper notification</p>
+            </div>
+          </div>
+          <div id="blockchain-status-pill" class="badge" style="padding:6px 14px;border-radius:var(--radius-pill);border:1px solid #A7F3D0;background:#ECFDF5;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#059669;margin-right:6px;"></span>
+            <span style="color:#059669;font-weight:700;">BLOCKCHAIN SECURE</span>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-3 p-12" style="background:#F8FAFC;border-radius:12px;border:1px solid #E2E8F0;font-size:12px;">
+          <div>
+            <p class="text-muted text-xs">Chain Height / Anchored:</p>
+            <p class="font-bold text-cyan font-mono mt-1" id="blockchain-block-count">Loading blocks...</p>
+          </div>
+          <div>
+            <p class="text-muted text-xs">Consensus Validator:</p>
+            <p class="font-bold text-white font-mono mt-1">Gate-01-Consensus-Node</p>
+          </div>
+          <div style="min-width:0;">
+            <p class="text-muted text-xs">Latest Block Hash:</p>
+            <p class="font-mono text-cyan truncate mt-1" id="blockchain-latest-hash" style="max-width:180px;">Calculating...</p>
+          </div>
+        </div>
+
+        <div class="row gap-10">
+          <button class="btn btn-outline btn-sm flex-1" id="blockchain-audit-btn" style="border-color:#BAE6FD;color:#0284C7;">
+            🔍 Verify Full Ledger
+          </button>
+          <button class="btn btn-danger btn-sm flex-1" id="blockchain-simulate-tamper-btn" title="Simulates a database alteration to test immediate notification">
+            🚨 Test Tamper Detection
+          </button>
+          <button class="btn btn-secondary btn-sm flex-1" id="blockchain-restore-btn">
+            🔄 Restore &amp; Re-Anchor
+          </button>
+        </div>
+      </div>
+
       <!-- Hero Vault Card -->
       <div class="hero-card">
         <div class="row-between pos-relative z-1">
           <div>
-            <div class="badge badge-primary mb-2" style="background:rgba(212,175,55,0.25);color:var(--gold-light);border-color:var(--gold-border-strong);">
-              <span class="badge-dot" style="background:var(--gold-light);"></span> HARDWARE PIN ENCRYPTED VAULT
+            <div class="badge badge-primary mb-2">
+              <span class="badge-dot"></span> SHA-256 BLOCKCHAIN &amp; PIN VAULT
             </div>
             <h2 class="text-2xl text-white mt-1" id="doc-count-hero">0 Documents</h2>
             <p class="row text-14 opacity-85 mt-2">
-              <span class="icon-sm text-gold" id="hero-lock-icon"></span>
-              Protected by 256-bit DigiLocker Verification PIN
+              <span class="icon-sm text-cyan" id="hero-lock-icon"></span>
+              Apartment Checkpoint Ephemeral Verification &amp; Tamper Sentinel
             </p>
           </div>
-          <div class="icon-circle animated-float" style="background:rgba(212,175,55,0.2);width:64px;height:64px;border-radius:22px;border-color:var(--gold-border-strong);">
-            <span class="icon-sm text-gold" id="hero-shield-icon" style="width:32px;height:32px;"></span>
+          <div class="icon-circle animated-float" style="background:#F0F9FF;width:64px;height:64px;border-radius:20px;border-color:#BAE6FD;">
+            <span class="icon-sm text-cyan" id="hero-shield-icon" style="width:32px;height:32px;"></span>
           </div>
         </div>
       </div>
 
       <!-- Quick Actions Grid -->
       <div class="grid-2">
-        <a href="javascript:void(0)" id="quick-upload-btn" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+        <a href="javascript:void(0)" id="quick-upload-btn" class="card card-interactive stack gap-12 text-left">
           <div class="icon-tile blue" id="upload-icon"></div>
           <div>
-            <p class="font-bold text-16 text-gold">Upload Document</p>
-            <p class="text-muted text-xs mt-1">Upload PDF, image, or certificate to vault</p>
+            <p class="font-bold text-16 text-cyan">Upload Document</p>
+            <p class="text-muted text-xs mt-1">Upload ID, lease, or vehicle pass to secure vault</p>
           </div>
         </a>
-        <a href="qr.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+        <a href="qr.html" class="card card-interactive stack gap-12 text-left">
           <div class="icon-tile amber" id="qr-icon"></div>
           <div>
-            <p class="font-bold text-16 text-gold">My Permanent QR</p>
-            <p class="text-muted text-xs mt-1">Share permanent vault QR &amp; allow access</p>
+            <p class="font-bold text-16 text-cyan">My Permanent QR</p>
+            <p class="text-muted text-xs mt-1">Share permanent vault QR &amp; allow verified access</p>
           </div>
         </a>
-        <a href="scan.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
+        <a href="scan.html" class="card card-interactive stack gap-12 text-left">
           <div class="icon-tile green" id="scan-icon"></div>
           <div>
-            <p class="font-bold text-16 text-gold">Scan QR Code</p>
-            <p class="text-muted text-xs mt-1">Request access to external vaults via camera</p>
+            <p class="font-bold text-16 text-cyan">Scan QR Code</p>
+            <p class="text-muted text-xs mt-1">Request access to external vaults via camera scanner</p>
           </div>
         </a>
-        <a href="approval.html" class="card card-interactive stack gap-12 text-left" style="background:linear-gradient(180deg, rgba(17,24,39,0.9) 0%, rgba(30,30,56,0.9) 100%);">
-          <div class="icon-tile amber" id="requests-icon"></div>
+        <a href="approval.html" class="card card-interactive stack gap-12 text-left">
+          <div class="icon-tile violet" id="requests-icon"></div>
           <div>
-            <p class="font-bold text-16 text-gold">Access Requests</p>
-            <p class="text-muted text-xs mt-1">PIN verify pending view requests</p>
+            <p class="font-bold text-16 text-cyan">Access Requests</p>
+            <p class="text-muted text-xs mt-1">PIN verify pending document view requests</p>
           </div>
         </a>
       </div>
 
-      <!-- Royal Stats Metrics Row -->
+      <!-- Vault Metrics Row -->
       <div>
-        <p class="section-title">Vault Metrics</p>
+        <p class="section-title">Vault Telemetry</p>
         <div class="grid-3" id="stats-row"></div>
       </div>
 
@@ -189,10 +233,10 @@
       <div id="my-vaults-section">
         <div class="row-between mb-3">
           <div>
-            <p class="section-title" style="margin-bottom:2px;">MongoDB Vault Folders</p>
-            <h3 class="text-20 font-extrabold text-gold">My Vault Collections</h3>
+            <p class="section-title" style="margin-bottom:2px;">Encrypted Clusters</p>
+            <h3 class="text-20 font-extrabold text-white">My Vault Collections</h3>
           </div>
-          <button class="btn btn-outline btn-sm" id="reset-vault-filter-btn" style="display:none;color:var(--gold-light);border-color:var(--gold-border);">✕ View All Vaults</button>
+          <button class="btn btn-outline btn-sm" id="reset-vault-filter-btn" style="display:none;color:var(--cyan);border-color:rgba(0,240,255,0.3);">✕ View All Vaults</button>
         </div>
         <div class="grid-2" id="vault-collections-grid"></div>
       </div>
@@ -201,8 +245,8 @@
       <div>
         <div class="row-between mb-3">
           <div>
-            <h3 class="text-20 font-extrabold text-gold">Imperial Document Explorer</h3>
-            <p class="text-xs text-muted">Browse, view, share, and manage your documents</p>
+            <h3 class="text-20 font-extrabold text-white">Document Explorer</h3>
+            <p class="text-xs text-muted">Browse, view, share, and manage encrypted files</p>
           </div>
           <div class="row gap-8">
             <button class="view-mode-btn active" id="view-mode-grid">Grid View</button>
@@ -219,7 +263,7 @@
 
       <!-- Audit Activity Log -->
       <div>
-        <p class="section-title">Recent Vault Activity Log</p>
+        <p class="section-title">Security Activity Stream</p>
         <div class="stack" id="activity-list"></div>
       </div>
 
@@ -237,8 +281,8 @@
     <div class="sheet-handle"></div>
     <div class="row-between mb-4">
       <div>
-        <div class="badge badge-primary mb-1">👑 ROYAL VAULT UPLOADER</div>
-        <h2 class="text-20 font-extrabold text-gold">Upload New Document</h2>
+        <div class="badge badge-primary mb-1">⚡ VAULT UPLOADER</div>
+        <h2 class="text-20 font-extrabold text-white">Upload New Document</h2>
         <p class="text-xs text-muted">Add files to your encrypted hardware-protected vault</p>
       </div>
       <button class="btn btn-outline btn-sm" id="close-upload-modal-btn">✕</button>
@@ -247,20 +291,18 @@
     <form id="upload-form" class="stack gap-14">
       <div class="field">
         <label for="upload-vault-name">Document / Collection Name</label>
-        <input type="text" id="upload-vault-name" placeholder="e.g. Imperial Certificates 2026" required>
+        <input type="text" id="upload-vault-name" placeholder="e.g. Master Certificates 2026" required>
       </div>
 
       <div class="field">
         <label for="upload-category">Category</label>
         <select id="upload-category" required>
-          <option value="identity">Identity</option>
-          <option value="financial">Financial</option>
-          <option value="education">Education</option>
-          <option value="property">Property</option>
-          <option value="insurance">Insurance</option>
-          <option value="medical">Medical</option>
-          <option value="personal">Personal</option>
-          <option value="other" selected>Other</option>
+          <option value="identity" selected>Govt ID &amp; Resident Proof</option>
+          <option value="apartment">Apartment &amp; Tenancy Deeds</option>
+          <option value="vehicles">Vehicle &amp; RFID Gate Passes</option>
+          <option value="visitors">Visitor &amp; Staff Passes</option>
+          <option value="clearance">Move-In / Gate Clearance</option>
+          <option value="emergency">Emergency &amp; Health Cards</option>
         </select>
       </div>
 
@@ -268,14 +310,14 @@
         <label>Select Document File(s)</label>
         <div class="dropzone" id="dropzone">
           <span class="icon-sm text-primary mb-2" id="upload-cloud-icon" style="width:40px;height:40px;margin:0 auto;display:block;"></span>
-          <p class="font-bold text-15 text-gold">Click or drop files here to upload</p>
+          <p class="font-bold text-15 text-cyan">Click or drop files here to upload</p>
           <p class="text-xs text-muted mt-1">Supports PDF, PNG, JPG, DOCX up to 10 MB per file</p>
           <input type="file" id="upload-file-input" name="documents" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.docx">
         </div>
-        <div id="file-list-preview" class="text-xs text-gold mt-2 font-semibold"></div>
+        <div id="file-list-preview" class="text-xs text-cyan mt-2 font-mono font-semibold"></div>
       </div>
 
-      <button type="submit" class="btn btn-primary mt-4" id="submit-upload-btn">Upload to Royal Vault</button>
+      <button type="submit" class="btn btn-primary mt-4" id="submit-upload-btn">Upload &amp; Anchor to Blockchain</button>
     </form>
   </div>
 </div>
@@ -287,10 +329,10 @@
   <div class="sheet text-center" style="max-width:440px;">
     <div class="sheet-handle"></div>
     <div class="badge badge-success mb-2"><span class="badge-dot"></span> ENCRYPTED QR RELEASE</div>
-    <h2 class="text-18 font-bold text-gold" id="qr-modal-title">Document Access QR</h2>
+    <h2 class="text-18 font-bold text-white" id="qr-modal-title">Document Access QR</h2>
     <p class="text-xs text-muted mt-1">Scan this QR code to request PIN-verified access</p>
-    <div id="doc-qr-canvas" class="flex-center p-20 my-4" style="background:#fff;border-radius:18px;box-shadow:var(--shadow-sm);border:2px solid var(--gold-border-strong);max-width:220px;margin:16px auto;"></div>
-    <p class="text-xs text-faint break-all mb-4" id="doc-qr-link"></p>
+    <div id="doc-qr-canvas" class="flex-center p-20 my-4" style="background:#fff;border-radius:18px;box-shadow:0 0 25px rgba(0,240,255,0.3);border:2px solid var(--cyan);max-width:220px;margin:16px auto;"></div>
+    <p class="text-xs text-faint font-mono break-all mb-4" id="doc-qr-link"></p>
     <div class="grid-2">
       <button class="btn btn-primary" id="copy-qr-link-btn">Copy Share Link</button>
       <button class="btn btn-outline" id="close-qr-modal-btn">Close</button>
@@ -300,6 +342,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/blockchain.js"></script>
 <script src="js/app.js"></script>
 <script src="js/emailjs.js"></script>
 <script src="js/qr.js"></script>
@@ -348,20 +391,20 @@ document.addEventListener('DOMContentLoaded', function(){
       }
 
       if (vaults.length === 0) {
-        grid.innerHTML = '<div class="empty-state w-full" style="grid-column:1/-1;"><div class="icon">📁</div><p class="text-sm font-bold text-gold">No Vault Collections Yet</p><p class="text-xs text-muted">Upload a document above to create your first vault collection.</p></div>';
+        grid.innerHTML = '<div class="empty-state w-full" style="grid-column:1/-1;"><div class="icon">📁</div><p class="text-sm font-bold text-white">No Vault Collections Yet</p><p class="text-xs text-muted">Upload a document above to create your first vault collection.</p></div>';
         return;
       }
 
       grid.innerHTML = vaults.map(v => {
         const isSelected = selectedVaultName === v.vaultName;
-        const cat = LD.data.categories().find(c => c.id === v.category) || { color: 'amber', name: v.category || 'Personal' };
-        return '<div class="card card-interactive stack gap-10" style="background:var(--royal-card);' + (isSelected ? 'border-color:var(--gold-primary);box-shadow:0 0 25px rgba(212,175,55,0.4);' : 'border-color:var(--gold-border);') + '" data-vault-name="' + v.vaultName + '">' +
+        const cat = LD.data.categories().find(c => c.id === v.category) || { color: 'cyan', name: v.category || 'Personal' };
+        return '<div class="card card-interactive stack gap-10" style="' + (isSelected ? 'border-color:var(--cyan);box-shadow:0 0 25px rgba(0,240,255,0.35);' : '') + '" data-vault-name="' + v.vaultName + '">' +
           '<div class="row-between">' +
-            '<div class="icon-tile ' + cat.color + '">📁</div>' +
+            '<div class="icon-tile ' + (cat.color || 'cyan') + '">📁</div>' +
             '<span class="badge badge-primary">' + (v.documentCount || 1) + ' Doc' + ((v.documentCount || 1) > 1 ? 's' : '') + '</span>' +
           '</div>' +
           '<div>' +
-            '<p class="font-bold text-16 text-gold truncate">' + v.vaultName + '</p>' +
+            '<p class="font-bold text-16 text-white truncate">' + v.vaultName + '</p>' +
             '<p class="text-xs text-muted mt-1">Category: ' + cat.name + '</p>' +
           '</div>' +
           '<button class="btn ' + (isSelected ? 'btn-primary' : 'btn-secondary') + ' btn-sm mt-1 w-full">' + (isSelected ? '✓ Vault Selected' : '📁 Open Vault') + '</button>' +
@@ -396,11 +439,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Render Category Chips
   function renderCategoryChips() {
-    const categories = [{ id: 'all', name: 'All Documents', color: 'amber' }].concat(LD.data.categories());
+    const categories = [{ id: 'all', name: 'All Documents', color: 'cyan' }].concat(LD.data.categories());
     const chipsContainer = document.getElementById('category-chips');
     chipsContainer.innerHTML = categories.map(c => {
       const isActive = c.id === currentCategory;
-      return '<button class="badge ' + (isActive ? 'badge-primary' : 'badge-neutral') + '" style="padding:10px 16px;font-size:13px;white-space:nowrap;flex-shrink:0;cursor:pointer;border:none;" data-cat="' + c.id + '">' + c.name + '</button>';
+      return '<button class="badge ' + (isActive ? 'badge-primary' : 'badge-neutral') + '" style="padding:8px 16px;font-size:12.5px;white-space:nowrap;flex-shrink:0;cursor:pointer;" data-cat="' + c.id + '">' + c.name + '</button>';
     }).join('');
 
     chipsContainer.querySelectorAll('[data-cat]').forEach(btn => {
@@ -432,26 +475,38 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if (docs.length === 0) {
       container.className = 'w-full';
-      container.innerHTML = '<div class="empty-state"><div class="icon">👑</div><p class="text-sm font-bold text-gold">No documents found</p><p class="text-xs mt-1 text-muted">Upload a new document or change your search filter.</p></div>';
+      container.innerHTML = '<div class="empty-state"><div class="icon">🛡️</div><p class="text-sm font-bold text-white">No documents found</p><p class="text-xs mt-1 text-muted">Upload a new document or change your search filter.</p></div>';
       return;
     }
+
+    const chain = (window.LD && LD.blockchain) ? LD.blockchain.getChain() : [];
 
     if (viewMode === 'grid') {
       container.className = 'grid-2';
       container.innerHTML = docs.map(d => {
-        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'amber', name: d.category || 'Document' };
+        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'cyan', name: d.category || 'Document' };
         const fileExt = (d.name || '').split('.').pop().toUpperCase();
-        return '<div class="card stack gap-12" style="background:var(--royal-card);border-color:var(--gold-border);">' +
+        const block = chain.find(b => b.docId === d.id);
+        const currentHash = (window.LD && LD.blockchain) ? LD.blockchain.hashDocument(d) : '';
+        const isTampered = block && (block.docHash !== currentHash);
+
+        return '<div class="card stack gap-12" style="' + (isTampered ? 'border:2px solid #F43F5E;box-shadow:0 0 25px rgba(244,63,94,0.4);animation:pulseAlarm 1.2s infinite alternate;' : '') + '">' +
           '<div class="row-between">' +
-            '<div class="icon-tile ' + cat.color + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
-            '<span class="badge badge-primary">' + fileExt + '</span>' +
+            '<div class="icon-tile ' + (cat.color || 'cyan') + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
+            '<div class="row gap-6">' +
+              (isTampered
+                ? '<span class="badge" style="background:#F43F5E;color:#05050A;font-weight:900;font-size:10.5px;">⚠️ TAMPERED</span>'
+                : '<span class="badge badge-success font-mono" style="font-size:10.5px;">✓ Block #' + (block ? block.index : '1') + '</span>') +
+              '<span class="badge badge-primary font-mono">' + fileExt + '</span>' +
+            '</div>' +
           '</div>' +
           '<div>' +
-            '<p class="font-bold text-16 text-gold truncate">' + d.name + '</p>' +
-            '<p class="text-muted text-xs mt-1">Issuer: ' + (d.issuer || 'Vault') + '</p>' +
+            '<p class="font-bold text-16 text-white truncate" style="' + (isTampered ? 'color:#F43F5E;' : '') + '">' + d.name + '</p>' +
+            '<p class="text-muted text-xs mt-1">Issuer: ' + (d.issuer || 'Skyline Heights Authority') + '</p>' +
+            '<p class="text-xs font-mono mt-1 text-cyan truncate" style="opacity:0.75;font-size:10px;">Hash: ' + (currentHash ? currentHash.slice(0, 16) + '...' : 'anchored') + '</p>' +
           '</div>' +
-          '<div class="row-between mt-2 pt-2" style="border-top:1px dashed var(--border);">' +
-            '<span class="badge badge-success"><span class="badge-dot"></span> Encrypted</span>' +
+          '<div class="row-between mt-2 pt-2" style="border-top:1px dashed #E2E8F0;">' +
+            '<span class="badge badge-success"><span class="badge-dot"></span> ' + (isTampered ? 'Unverified' : 'Immutable') + '</span>' +
             '<div class="row gap-8">' +
               '<a href="viewer.html?doc=' + encodeURIComponent(d.id) + '" class="btn btn-secondary btn-sm" title="View Document">👁️ View</a>' +
               '<button class="btn btn-outline btn-sm share-qr-btn" data-doc-id="' + d.id + '" data-doc-name="' + d.name + '">📱 QR</button>' +
@@ -463,11 +518,20 @@ document.addEventListener('DOMContentLoaded', function(){
     } else {
       container.className = 'w-full stack gap-10';
       container.innerHTML = docs.map(d => {
-        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'amber', name: d.category || 'Document' };
-        return '<div class="list-row card-interactive">' +
-          '<div class="icon-tile ' + cat.color + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
+        const cat = LD.data.categories().find(c => c.id === d.category) || { color: 'cyan', name: d.category || 'Document' };
+        const block = chain.find(b => b.docId === d.id);
+        const currentHash = (window.LD && LD.blockchain) ? LD.blockchain.hashDocument(d) : '';
+        const isTampered = block && (block.docHash !== currentHash);
+
+        return '<div class="list-row card-interactive" style="' + (isTampered ? 'border:1px solid #F43F5E;box-shadow:0 0 20px rgba(244,63,94,0.3);' : '') + '">' +
+          '<div class="icon-tile ' + (cat.color || 'cyan') + '">' + LD.icons[LD.ui.categoryIcon(d.category)] + '</div>' +
           '<div style="flex:1;min-width:0;">' +
-            '<p class="font-bold text-15 text-gold truncate">' + d.name + '</p>' +
+            '<div class="row gap-8 items-center">' +
+              '<p class="font-bold text-15 text-white truncate" style="' + (isTampered ? 'color:#F43F5E;' : '') + '">' + d.name + '</p>' +
+              (isTampered
+                ? '<span class="badge badge-danger text-xs">⚠️ HASH MISMATCH</span>'
+                : '<span class="badge badge-success text-xs font-mono">Block #' + (block ? block.index : '1') + '</span>') +
+            '</div>' +
             '<p class="text-muted text-xs">' + cat.name + ' &middot; Issued by ' + d.issuer + '</p>' +
           '</div>' +
           '<div class="row gap-8">' +
@@ -523,11 +587,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
     document.getElementById('user-name').textContent = user.name;
     document.getElementById('user-avatar').textContent = user.initials;
-    document.getElementById('user-email-role').textContent = user.email ? (user.email + ' • ' + user.role.toUpperCase()) : 'Royal Vault Identity';
+    document.getElementById('user-email-role').textContent = user.email ? (user.email + ' • ' + user.role.toUpperCase()) : 'Hardware Vault Enclave';
     document.getElementById('doc-count-hero').textContent = docs.length + ' Encrypted Documents';
-
-    const hour = new Date().getHours();
-    document.getElementById('greeting').textContent = hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
 
     // Storage calculation
     const totalBytes = docs.reduce((acc, d) => acc + (d.metadata?.size || 150000), 0);
@@ -543,29 +604,66 @@ document.addEventListener('DOMContentLoaded', function(){
       { value: LD.data.approvedSessions().length, label: 'Active Sessions' }
     ];
     statsRow.innerHTML = stats.map(s =>
-      '<div class="stat-card"><p class="stat-value">' + s.value + '</p><p class="stat-label">' + s.label + '</p></div>'
+      '<div class="stat-card"><p class="stat-value font-mono">' + s.value + '</p><p class="stat-label">' + s.label + '</p></div>'
     ).join('');
 
     renderVaultCollections();
     renderCategoryChips();
     renderDocuments();
 
+    // Blockchain Telemetry
+    if (window.LD && LD.blockchain) {
+      const chain = LD.blockchain.getChain();
+      const audit = LD.blockchain.verify();
+      const blockCountEl = document.getElementById('blockchain-block-count');
+      const latestHashEl = document.getElementById('blockchain-latest-hash');
+      if (blockCountEl) blockCountEl.textContent = chain.length + ' Blocks Anchored';
+      if (latestHashEl) latestHashEl.textContent = (chain.length > 0 ? chain[chain.length - 1].hash : 'Genesis');
+      LD.blockchain.updateStatusPill(audit);
+    }
+
     // Activity
     const activity = LD.data.activity(5);
     const activityList = document.getElementById('activity-list');
     if (activity.length === 0) {
-      activityList.innerHTML = '<div class="empty-state"><div class="icon">👑</div><p class="text-sm font-semibold text-gold">No activity logged yet</p></div>';
+      activityList.innerHTML = '<div class="empty-state"><div class="icon">🛡️</div><p class="text-sm font-semibold text-white">No activity logged yet</p></div>';
     } else {
       activityList.innerHTML = activity.map(a => {
-        const iconMap = { connect: 'users', approve: 'check', deny: 'x', view: 'eye', request: 'folder' };
-        const colorMap = { connect: 'amber', approve: 'green', deny: 'red', view: 'blue', request: 'amber' };
+        const iconMap = { connect: 'users', approve: 'check', deny: 'x', view: 'eye', request: 'folder', blockchain_tamper_alert: 'shield', blockchain_anchored: 'lock' };
+        const colorMap = { connect: 'violet', approve: 'green', deny: 'red', view: 'blue', request: 'amber', blockchain_tamper_alert: 'red', blockchain_anchored: 'green' };
         return '<div class="list-row">' +
-          '<div class="icon-tile ' + (colorMap[a.type]||'amber') + '">' + (LD.icons[iconMap[a.type]]||LD.icons.shield) + '</div>' +
-          '<div style="flex:1;"><p class="text-sm font-semibold text-gold">' + a.title + '</p><p class="text-muted text-xs">' + LD.ui.timeAgo(a.at) + '</p></div>' +
+          '<div class="icon-tile ' + (colorMap[a.type]||'cyan') + '">' + (LD.icons[iconMap[a.type]]||LD.icons.shield) + '</div>' +
+          '<div style="flex:1;"><p class="text-sm font-semibold text-white">' + a.title + '</p><p class="text-muted text-xs font-mono">' + LD.ui.timeAgo(a.at) + '</p></div>' +
           '</div>';
       }).join('');
     }
   }
+
+  // Blockchain Sentinel Control Handlers
+  document.getElementById('blockchain-audit-btn').addEventListener('click', () => {
+    if (window.LD && LD.blockchain) {
+      const audit = LD.blockchain.checkIntegrityNow();
+      if (audit.valid) {
+        LD.ui.toast('Blockchain Audit Passed: ' + audit.chainLength + ' blocks verified intact!', 'success');
+      } else {
+        LD.ui.toast('⚠️ Tamper Detected in ' + audit.tamperedDocs.length + ' document(s)!', 'error');
+      }
+      renderDocuments();
+    }
+  });
+
+  document.getElementById('blockchain-simulate-tamper-btn').addEventListener('click', () => {
+    if (window.LD && LD.blockchain) {
+      LD.blockchain.simulateTamper();
+      renderDocuments();
+    }
+  });
+
+  document.getElementById('blockchain-restore-btn').addEventListener('click', () => {
+    if (window.LD && LD.blockchain) {
+      LD.blockchain.restoreLegitimateState();
+    }
+  });
 
   // View Mode Switchers
   document.getElementById('view-mode-grid').addEventListener('click', () => {
@@ -614,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const submitBtn = document.getElementById('submit-upload-btn');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Uploading to Royal Vault...';
+    submitBtn.textContent = 'Encrypting & Uploading...';
 
     const formData = new FormData();
     formData.append('vaultName', vaultName);
@@ -624,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function(){
     try {
       const result = await LD.api.uploadDocuments(formData);
       if (result && result.success) {
-        LD.ui.toast('Document uploaded to Royal Vault successfully!', 'success');
+        LD.ui.toast('Document uploaded to Secure Vault successfully!', 'success');
         closeUploadModal();
         selectedFiles = [];
         document.getElementById('file-list-preview').innerHTML = '';
@@ -638,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function(){
       LD.ui.toast('Upload failed. Please check network.', 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Upload to Royal Vault';
+      submitBtn.textContent = 'Upload to Secure Vault';
     }
   });
 

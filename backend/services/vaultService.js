@@ -9,6 +9,7 @@ const User = require('../models/User');
 const { uploadFile } = require('./fileStorageService');
 const { getOrCreateVaultQr, regenerateVaultQr, decodeVaultQrPayload } = require('./qrService');
 const { assertWithinQuota } = require('../utils/accessControl');
+const { anchorDocument } = require('./blockchainService');
 
 function getDocumentTypeFromMime(mimeType) {
   switch (mimeType) {
@@ -56,6 +57,11 @@ async function createVaultForUser(user, vaultName, category, files) {
       }
     });
     documents.push(document);
+    try {
+      await anchorDocument(document, user.email || 'Resident-Vault-Anchor');
+    } catch (e) {
+      console.warn('⚠️ Blockchain anchor notice:', e.message);
+    }
   }
 
   const qr = await getOrCreateVaultQr(user, vault);
@@ -179,6 +185,11 @@ async function addDocumentsToVault(user, vaultId, files) {
       }
     });
     documents.push(document);
+    try {
+      await anchorDocument(document, user.email || 'Resident-Vault-Anchor');
+    } catch (e) {
+      console.warn('⚠️ Blockchain anchor notice:', e.message);
+    }
   }
   return documents;
 }

@@ -15,7 +15,8 @@ const otpSchema = new mongoose.Schema({
   },
   code: {
     type: String,
-    required: [true, 'OTP code is required']
+    required: [true, 'OTP code is required'],
+    trim: true
   },
   type: {
     type: String,
@@ -38,18 +39,23 @@ const otpSchema = new mongoose.Schema({
   timestamps: { createdAt: 'createdAt' }
 });
 
-// --- TTL index: auto-delete expired documents ---
-otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// TTL index: Clean up old used/unused OTPs after 24 hours (86400 seconds)
+// Prevents premature deletion due to clock drift between server and MongoDB Atlas
+otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
-// --- Instance method: check if OTP is expired ---
+// Instance method: check if OTP is expired
+// Uses elapsed time relative to createdAt (15-minute window) to be resilient to clock drift
 otpSchema.methods.isExpired = function () {
+  if (this.createdAt) {
+    const elapsedMs = Date.now() - this.createdAt.getTime();
+    return elapsedMs > 15 * 60 * 1000;
+  }
   return Date.now() > this.expiresAt.getTime();
 };
 
-// --- Instance method: check if OTP is valid ---
+// Instance method: check if OTP is valid
 otpSchema.methods.isValid = function (enteredCode) {
-  return !this.isUsed && !this.isExpired() && this.code === enteredCode;
+  return !this.isUsed && !this.isExpired() && String(this.code).trim() === String(enteredCode).trim();
 };
 
 module.exports = mongoose.model('Otp', otpSchema);
-

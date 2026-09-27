@@ -132,8 +132,8 @@
           const params = new URLSearchParams(window.location.search);
           const redirectTarget = params.get('redirect');
           const destination = (redirectTarget && !redirectTarget.startsWith('http') && !redirectTarget.includes('//'))
-            ? redirectTarget
-            : 'index.html';
+            ? (redirectTarget.startsWith('/') ? redirectTarget : '/' + redirectTarget)
+            : '/index.html';
 
           const finalDestination = (!userForStorage.isAdmin && !userForStorage.termsAccepted)
             ? 'terms.html?redirect=' + encodeURIComponent(destination)

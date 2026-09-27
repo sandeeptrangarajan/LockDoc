@@ -1,22 +1,22 @@
 {
   "_note": "Reference copy of LD.SEED_DOCUMENTS in js/storage.js — the actual runtime source of truth.",
   "categories": [
-    { "id": "identity",  "name": "Identity",  "icon": "id",     "color": "blue"  },
-    { "id": "financial", "name": "Financial", "icon": "bank",   "color": "green" },
-    { "id": "education", "name": "Education", "icon": "cap",    "color": "amber" },
-    { "id": "property",  "name": "Property",  "icon": "home",   "color": "blue"  },
-    { "id": "insurance", "name": "Insurance", "icon": "shield", "color": "green" },
-    { "id": "other",     "name": "Other",     "icon": "folder", "color": "amber" }
+    { "id": "identity",  "name": "Govt ID & Resident Proof",  "icon": "id",       "color": "blue"  },
+    { "id": "apartment", "name": "Apartment & Tenancy Deeds", "icon": "home2",    "color": "cyan"  },
+    { "id": "vehicles",  "name": "Vehicle & RFID Gate Passes","icon": "shield",   "color": "green" },
+    { "id": "visitors",  "name": "Visitor & Staff Passes",    "icon": "briefcase","color": "amber" },
+    { "id": "clearance", "name": "Move-In / Gate Clearance",  "icon": "folder",   "color": "blue"  },
+    { "id": "emergency", "name": "Emergency & Health Cards",  "icon": "shield",   "color": "red"   }
   ],
   "documents": [
-    { "id": "doc_aadhaar",  "name": "Aadhaar Card",            "category": "identity",  "issuer": "UIDAI",                "verified": true },
-    { "id": "doc_pan",      "name": "PAN Card",                "category": "identity",  "issuer": "Income Tax Dept.",     "verified": true },
-    { "id": "doc_dl",       "name": "Driving Licence",         "category": "identity",  "issuer": "RTO",                  "verified": true },
-    { "id": "doc_bank",     "name": "Bank Statement — Q2",     "category": "financial", "issuer": "State Bank",           "verified": true },
-    { "id": "doc_itr",      "name": "Income Tax Return 24-25", "category": "financial", "issuer": "Income Tax Dept.",     "verified": true },
-    { "id": "doc_marks",    "name": "12th Marksheet",          "category": "education", "issuer": "State Board",          "verified": true },
-    { "id": "doc_degree",   "name": "Degree Certificate",      "category": "education", "issuer": "University",           "verified": true },
-    { "id": "doc_property", "name": "Property Registration",   "category": "property",  "issuer": "Sub-Registrar Office", "verified": true },
-    { "id": "doc_insure",   "name": "Health Insurance Policy", "category": "insurance", "issuer": "Star Health",          "verified": true }
+    { "id": "doc_aadhaar",    "name": "National Aadhaar Card (Resident ID)",  "category": "identity",  "issuer": "UIDAI / Govt. of India",        "verified": true },
+    { "id": "doc_dl",         "name": "Driver License & Address Proof",       "category": "identity",  "issuer": "State Motor Transport Dept.",    "verified": true },
+    { "id": "doc_lease",      "name": "Registered Flat Lease Deed (Unit 402)","category": "apartment", "issuer": "Sub-Registrar & Flat Owner",   "verified": true },
+    { "id": "doc_noc",        "name": "RWA Maintenance Clearance NOC",        "category": "apartment", "issuer": "Skyline Heights RWA Society",   "verified": true },
+    { "id": "doc_parking",    "name": "Tower B Basement Parking Tag & RC",    "category": "vehicles",  "issuer": "Apartment Security Division",   "verified": true },
+    { "id": "doc_guest",      "name": "Pre-Approved Visitor Entry Pass",      "category": "visitors",  "issuer": "Main Gate Checkpoint Alpha",     "verified": true },
+    { "id": "doc_contractor", name: "Contractor & Interior Work Permit",    "category": "visitors",  "issuer": "Facility Management Desk",       "verified": true },
+    { "id": "doc_movein",     "name": "Heavy Vehicle Move-In Gate Pass",      "category": "clearance", "issuer": "Society Estate Office",          "verified": true },
+    { "id": "doc_emergency",  "name": "Resident Emergency Contact & Medical", "category": "emergency", "issuer": "City Health Authority",         "verified": true }
   ]
 }

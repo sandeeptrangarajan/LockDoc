@@ -28,6 +28,7 @@ const qrRoutes = require('./routes/qrRoutes');
 const vaultRoutes = require('./routes/vaultRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const receiptRoutes = require('./routes/receiptRoutes');
+const blockchainRoutes = require('./routes/blockchainRoutes');
 
 // ---- Initialize Express App ----
 const app = express();
@@ -79,6 +80,7 @@ app.use('/api/qr', qrRoutes);
 app.use('/api/vaults', vaultRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/receipts', receiptRoutes);
+app.use('/api/blockchain', blockchainRoutes);
 
 // Health & Database Status Endpoints
 app.get('/favicon.ico', (req, res) => res.status(204).end());
@@ -114,6 +116,15 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
+// Friendly aliases for pages accessed from /public/ subpath
+app.get('/public/index.html', (req, res) => res.redirect('/index.html'));
+app.get('/public/viewer.html', (req, res) => res.redirect('/viewer.html' + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '')));
+app.get('/public/approval.html', (req, res) => res.redirect('/approval.html'));
+app.get('/public/qr.html', (req, res) => res.redirect('/qr.html'));
+app.get('/public/scan.html', (req, res) => res.redirect('/scan.html'));
+app.get('/public/categories.html', (req, res) => res.redirect('/categories.html'));
+app.get('/public/connect.html', (req, res) => res.redirect('/connect.html'));
+
 // ============================================================
 // 404 Handler
 // ============================================================
@@ -145,15 +156,28 @@ async function startServer() {
       await verifyEmailConfig();
     } catch (e) {}
 
-    app.listen(PORT, () => {
-      console.log('\n========================================');
-      console.log('🔐 LockDoc Auth Server v2.0');
-      console.log(`📡 Running on http://localhost:${PORT}`);
-      console.log('========================================');
-      console.log('\n📋 API & Database Telemetry Active');
-      console.log(`🟢 Database Status: ${getDBStatus().status}`);
-      console.log(`🌐 Application Root Dashboard: http://localhost:${PORT}/index.html`);
-    });
+    function listenOnPort(currentPort) {
+      const server = app.listen(currentPort, () => {
+        console.log('\n========================================');
+        console.log('🔐 LockDoc Auth Server v2.0');
+        console.log(`📡 Running on http://localhost:${currentPort}`);
+        console.log('========================================');
+        console.log('\n📋 API & Database Telemetry Active');
+        console.log(`🟢 Database Status: ${getDBStatus().status}`);
+        console.log(`🌐 Application Root Dashboard: http://localhost:${currentPort}/index.html`);
+      });
+
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.warn(`⚠️ Port ${currentPort} is busy. Trying port ${currentPort + 1}...`);
+          listenOnPort(currentPort + 1);
+        } else {
+          console.error('❌ Server listen error:', err);
+        }
+      });
+    }
+
+    listenOnPort(PORT);
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
   }

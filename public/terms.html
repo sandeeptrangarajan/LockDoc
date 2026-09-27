@@ -21,7 +21,7 @@
     }
     .terms-body h4 {
       font-family: var(--font-display);
-      color: var(--gold-deep);
+      color: var(--cyan);
       margin: 18px 0 6px;
     }
     .terms-body h4:first-child { margin-top: 0; }
@@ -35,7 +35,7 @@
       margin-top: 3px;
       width: 18px;
       height: 18px;
-      accent-color: var(--gold-deep);
+      accent-color: var(--cyan);
     }
   </style>
 </head>
@@ -116,7 +116,10 @@
         }
 
         const params = new URLSearchParams(window.location.search);
-        const destination = params.get('redirect') || 'index.html';
+        let destination = params.get('redirect') || '/index.html';
+        if (!destination.startsWith('/') && !destination.startsWith('http')) {
+          destination = '/' + destination;
+        }
         window.location.href = destination;
       } catch (err) {
         errorEl.textContent = err.message || 'Something went wrong. Please try again.';

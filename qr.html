@@ -27,19 +27,19 @@
         nothing is shared until you approve it with your PIN.
       </p>
 
-      <div class="card text-center p-28-20" style="background:linear-gradient(180deg, #ffffff 0%, #F5F3FF 100%);">
+      <div class="card text-center p-28-20">
         <div class="row justify-center gap-8 mb-4">
           <span class="badge badge-success"><span class="badge-dot"></span> Permanent Code</span>
           <span class="badge hidden" id="risk-badge"></span>
         </div>
-        <div id="qr-canvas" class="flex-center min-h-220 p-20" style="background:#fff;border-radius:18px;box-shadow:var(--shadow-sm);border:2px solid var(--primary-light);max-width:240px;margin:0 auto;"></div>
-        <p class="text-xs text-faint mt-4 break-all letter-spacing-xs" id="qr-token-display"></p>
+        <div id="qr-canvas" class="flex-center min-h-220 p-20" style="background:#fff;border-radius:18px;box-shadow:0 4px 16px rgba(0,0,0,0.06);border:2px solid #BAE6FD;max-width:240px;margin:0 auto;"></div>
+        <p class="text-xs text-faint mt-4 break-all letter-spacing-xs font-mono" id="qr-token-display"></p>
       </div>
 
       <div class="card row gap-12">
         <div class="icon-tile blue"><span class="i"></span></div>
         <div style="flex:1;">
-          <p class="font-bold text-15" id="qr-owner-name">—</p>
+          <p class="font-bold text-15 text-white" id="qr-owner-name">—</p>
           <p class="text-muted text-xs" id="qr-owner-sub">Vault Owner Identity</p>
         </div>
       </div>
@@ -49,10 +49,10 @@
         <button class="btn btn-secondary" id="regenerate-btn">Regenerate Code</button>
       </div>
 
-      <div class="card" style="background:var(--primary-light);border:1px solid rgba(79, 70, 229, 0.2);">
+      <div class="card" style="background:#F0F9FF;border:1px solid #BAE6FD;">
         <div class="row" style="align-items:flex-start;gap:12px;">
-          <span style="width:20px;height:20px;color:var(--primary);flex-shrink:0;margin-top:2px;" id="info-shield"></span>
-          <p class="text-xs" style="color:var(--primary-darker);line-height:1.5;font-weight:600;">
+          <span style="width:20px;height:20px;color:var(--cyan);flex-shrink:0;margin-top:2px;" id="info-shield"></span>
+          <p class="text-xs" style="color:var(--text-secondary);line-height:1.5;font-weight:500;">
             This QR code never expires, but you stay in full control — every access request needs your explicit
             PIN-verified approval before any document becomes viewable.
           </p>
@@ -67,6 +67,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/blockchain.js"></script>
 <script src="js/app.js"></script>
 <script src="js/emailjs.js"></script>
 <script src="js/qr.js"></script>

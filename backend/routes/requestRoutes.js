@@ -19,6 +19,7 @@ router.post('/connection/:requestId/decline', requestController.declineConnectio
 
 router.post('/document', requestController.createDocumentRequest);
 router.get('/document', requestController.listDocumentRequests);
+router.get('/pending', requestController.listDocumentRequests);
 router.get('/document/access', requestController.validateAccess);
 router.get('/document/:requestId', requestController.getDocumentRequest);
 router.post('/document/:requestId/approve', requestController.approveDocument);

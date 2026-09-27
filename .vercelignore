@@ -1,0 +1,13 @@
+node_modules
+backend/node_modules
+backend/uploads
+backend/.env
+.env
+.git
+*.log
+.DS_Store
+TODO.md
+.editorconfig
+backend/test-email.js
+backend/checkVaultQr.js
+backend/migrations

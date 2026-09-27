@@ -70,47 +70,59 @@ LD.uid = function(prefix){
 // riskLevel drives how strongly the owner must verify before approving
 // access to this folder: 'low' -> app approval, 'medium' -> fingerprint,
 // 'high' -> face verification. See LD.qr.renderForCategory / verify.js.
+// Urban Apartment & City Entrance Security Checkpoint Data
 LD.SEED_CATEGORIES = [
-  { id: 'identity',    name: 'Identity',    icon: 'id',       color: 'blue',  riskLevel: 'high'   },
-  { id: 'financial',   name: 'Financial',   icon: 'bank',     color: 'green', riskLevel: 'high'   },
-  { id: 'education',   name: 'Education',   icon: 'cap',      color: 'amber', riskLevel: 'low'    },
-  { id: 'medical',     name: 'Medical',     icon: 'shield',   color: 'red',   riskLevel: 'high'   },
-  { id: 'employment',  name: 'Employment',  icon: 'briefcase',color: 'blue',  riskLevel: 'medium' },
-  { id: 'personal',    name: 'Personal',    icon: 'folder',   color: 'amber', riskLevel: 'low'    },
-  { id: 'property',    name: 'Property',    icon: 'home',     color: 'blue',  riskLevel: 'medium' },
-  { id: 'insurance',   name: 'Insurance',   icon: 'shield',   color: 'green', riskLevel: 'medium' },
-  { id: 'other',       name: 'Other',       icon: 'folder',   color: 'amber', riskLevel: 'low'    }
+  { id: 'identity',    name: 'Govt ID & Resident Proof',  icon: 'id',       color: 'blue',  riskLevel: 'high'   },
+  { id: 'apartment',   name: 'Apartment & Tenancy Deeds', icon: 'home2',    color: 'cyan',  riskLevel: 'high'   },
+  { id: 'vehicles',    name: 'Vehicle & RFID Gate Passes',icon: 'shield',   color: 'green', riskLevel: 'medium' },
+  { id: 'visitors',    name: 'Visitor & Staff Passes',    icon: 'briefcase',color: 'amber', riskLevel: 'medium' },
+  { id: 'clearance',   name: 'Move-In / Gate Clearance',  icon: 'folder',   color: 'blue',  riskLevel: 'low'    },
+  { id: 'emergency',   name: 'Emergency & Health Cards',  icon: 'shield',   color: 'red',   riskLevel: 'high'   }
 ];
 
 LD.SEED_DOCUMENTS = [
-  { id: 'doc_aadhaar',  name: 'Aadhaar Card',            category: 'identity',  issuer: 'UIDAI',                 verified: true },
-  { id: 'doc_pan',      name: 'PAN Card',                category: 'identity',  issuer: 'Income Tax Dept.',      verified: true },
-  { id: 'doc_dl',       name: 'Driving Licence',         category: 'identity',  issuer: 'RTO',                   verified: true },
-  { id: 'doc_bank',     name: 'Bank Statement — Q2',     category: 'financial', issuer: 'State Bank',            verified: true },
-  { id: 'doc_itr',      name: 'Income Tax Return 24-25', category: 'financial', issuer: 'Income Tax Dept.',      verified: true },
-  { id: 'doc_marks',    name: '12th Marksheet',          category: 'education', issuer: 'State Board',           verified: true },
-  { id: 'doc_degree',   name: 'Degree Certificate',      category: 'education', issuer: 'University',            verified: true },
-  { id: 'doc_property', name: 'Property Registration',   category: 'property',  issuer: 'Sub-Registrar Office',  verified: true },
-  { id: 'doc_insure',   name: 'Health Insurance Policy', category: 'insurance', issuer: 'Star Health',           verified: true }
+  { id: 'doc_aadhaar',    name: 'National Aadhaar Card (Resident ID)',  category: 'identity',  issuer: 'UIDAI / Govt. of India',        verified: true },
+  { id: 'doc_dl',         name: 'Driver License & Address Proof',       category: 'identity',  issuer: 'State Motor Transport Dept.',    verified: true },
+  { id: 'doc_lease',      name: 'Registered Flat Lease Deed (Unit 402)',category: 'apartment', issuer: 'Sub-Registrar & Flat Owner',   verified: true },
+  { id: 'doc_noc',        name: 'RWA Maintenance Clearance NOC',        category: 'apartment', issuer: 'Skyline Heights RWA Society',   verified: true },
+  { id: 'doc_parking',    name: 'Tower B Basement Parking Tag & RC',    category: 'vehicles',  issuer: 'Apartment Security Division',   verified: true },
+  { id: 'doc_guest',      name: 'Pre-Approved Visitor Entry Pass',      category: 'visitors',  issuer: 'Main Gate Checkpoint Alpha',     verified: true },
+  { id: 'doc_contractor', name: 'Contractor & Interior Work Permit',    category: 'visitors',  issuer: 'Facility Management Desk',       verified: true },
+  { id: 'doc_movein',     name: 'Heavy Vehicle Move-In Gate Pass',      category: 'clearance', issuer: 'Society Estate Office',          verified: true },
+  { id: 'doc_emergency',  name: 'Resident Emergency Contact & Medical', category: 'emergency', issuer: 'City Health Authority',         verified: true }
 ];
 
 LD.init = function(){
+  // Automatic migration to Apartment Checkpoint & Blockchain concept
+  var SEED_VERSION = 'v3_apartment_blockchain_sentinel';
+  var storedVersion = LD.store.get('lockdoc_seed_version');
+  if (storedVersion !== SEED_VERSION) {
+    LD.store.set(LD.KEYS.CATEGORIES, LD.SEED_CATEGORIES);
+    LD.store.set(LD.KEYS.DOCUMENTS, LD.SEED_DOCUMENTS);
+    LD.store.set(LD.KEYS.ORIGINAL_DOCS_BACKUP, LD.SEED_DOCUMENTS);
+    LD.store.set('lockdoc_seed_version', SEED_VERSION);
+    try {
+      localStorage.removeItem('lockdoc_blockchain_ledger');
+    } catch(e) {}
+  }
+
   // User profile
-  if(!LD.store.get(LD.KEYS.USER)){
+  if(!LD.store.get(LD.KEYS.USER) || storedVersion !== SEED_VERSION){
     LD.store.set(LD.KEYS.USER, {
-      name: 'Arjun Mehta',
-      initials: 'AM',
-      email: '',
-      role: '',                     // 'holder' | 'verifier' | 'organization'
-      isVerified: false,
-      memberSince: new Date().toISOString(),
+      name: 'Aarav Sharma',
+      initials: 'AS',
+      email: 'aarav.sharma@skylineheights.org',
+      role: 'Resident (Flat 402 - Tower B)',
+      apartment: 'Skyline City Heights Apartments',
+      isVerified: true,
+      memberSince: '2026-01-15T10:00:00.000Z',
       pinSet: true
     });
   }
 
   // Permanent QR token — generated once, never changes
   if(!LD.store.get(LD.KEYS.QR_TOKEN)){
-    LD.store.set(LD.KEYS.QR_TOKEN, 'LD-' + LD.uid());
+    LD.store.set(LD.KEYS.QR_TOKEN, 'LD-GATE-' + LD.uid());
   }
 
   // Categories
@@ -124,13 +136,53 @@ LD.init = function(){
   }
 
   // Sessions (connection/access requests)
-  if(!LD.store.get(LD.KEYS.SESSIONS)){
-    LD.store.set(LD.KEYS.SESSIONS, []);
+  if(!LD.store.get(LD.KEYS.SESSIONS) || storedVersion !== SEED_VERSION){
+    LD.store.set(LD.KEYS.SESSIONS, [
+      {
+        id: 'sess_gate_01',
+        token: 'LD-GATE-ALPHA',
+        requesterName: 'Main Gate Security (Officer Vikram)',
+        purpose: 'Visitor Verification for Flat 402 Entry',
+        documentIds: ['doc_aadhaar'],
+        status: 'approved',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        decidedAt: new Date(Date.now() - 3550000).toISOString()
+      },
+      {
+        id: 'sess_gate_02',
+        token: 'LD-GATE-CONCIERGE',
+        requesterName: 'Tower B Concierge Desk',
+        purpose: 'Contractor Interior Work Permit Validation',
+        documentIds: ['doc_contractor'],
+        status: 'pending',
+        createdAt: new Date(Date.now() - 600000).toISOString()
+      }
+    ]);
+  }
+
+  // Connection requests
+  if(!LD.store.get(LD.KEYS.CONNECTION_REQUESTS) || storedVersion !== SEED_VERSION){
+    LD.store.set(LD.KEYS.CONNECTION_REQUESTS, [
+      {
+        requestId: 'req_gate_01',
+        requesterId: 'usr_guard_vikram',
+        requesterName: 'Main Gate Checkpoint (Guard Vikram)',
+        ownerId: 'usr_resident_aarav',
+        ownerName: 'Aarav Sharma (Flat 402)',
+        purpose: 'Visitor & Vehicle Gate Verification',
+        status: 'pending',
+        createdAt: new Date(Date.now() - 600000).toISOString()
+      }
+    ]);
   }
 
   // Activity log
-  if(!LD.store.get(LD.KEYS.ACTIVITY)){
-    LD.store.set(LD.KEYS.ACTIVITY, []);
+  if(!LD.store.get(LD.KEYS.ACTIVITY) || storedVersion !== SEED_VERSION){
+    LD.store.set(LD.KEYS.ACTIVITY, [
+      { id: 'act_01', type: 'blockchain_anchored', title: 'Blockchain Ledger Verified', detail: 'Consensus Node anchored 9 apartment credentials', at: new Date(Date.now() - 1200000).toISOString() },
+      { id: 'act_02', type: 'qr_scanned', title: 'Checkpoint Alpha QR Scanned', detail: 'Main gate verified resident QR code', at: new Date(Date.now() - 3600000).toISOString() },
+      { id: 'act_03', type: 'document_approved', title: 'National ID Verified at Gate', detail: 'Ephemeral 60s watermarked view issued to Guard Vikram', at: new Date(Date.now() - 3550000).toISOString() }
+    ]);
   }
 
   // Settings

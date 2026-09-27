@@ -117,16 +117,49 @@ function setLoading(btnId, isLoading, text) {
   }
 }
 
-// ---- OTP Input Auto-Tab ----
+// ---- OTP Input Auto-Tab & Paste Support ----
 function setupOTPInputs() {
   const inputs = document.querySelectorAll('.otp-input-row input');
   inputs.forEach((input, index) => {
+    input.addEventListener('paste', function (e) {
+      e.preventDefault();
+      const pastedData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+      if (!pastedData) return;
+      const digits = pastedData.slice(0, 6).split('');
+      digits.forEach((digit, i) => {
+        if (inputs[i]) {
+          inputs[i].value = digit;
+          inputs[i].classList.add('filled');
+        }
+      });
+      const nextIndex = Math.min(digits.length, 5);
+      if (inputs[nextIndex]) inputs[nextIndex].focus();
+      const verifyBtn = document.getElementById('verify-otp-btn');
+      if (verifyBtn) verifyBtn.disabled = getOTPValue().length !== 6;
+    });
+
     input.addEventListener('input', function () {
-      this.value = this.value.replace(/\D/g, '').slice(-1);
-      this.classList.toggle('filled', this.value !== '');
-      if (this.value && index < 5) {
-        inputs[index + 1].focus();
+      const val = this.value.replace(/\D/g, '');
+      if (val.length > 1) {
+        // Multi-character input (e.g. mobile autofill)
+        const digits = val.slice(0, 6).split('');
+        digits.forEach((digit, i) => {
+          if (inputs[index + i]) {
+            inputs[index + i].value = digit;
+            inputs[index + i].classList.add('filled');
+          }
+        });
+        const nextIndex = Math.min(index + digits.length, 5);
+        if (inputs[nextIndex]) inputs[nextIndex].focus();
+      } else {
+        this.value = val.slice(-1);
+        this.classList.toggle('filled', this.value !== '');
+        if (this.value && index < 5) {
+          inputs[index + 1].focus();
+        }
       }
+      const verifyBtn = document.getElementById('verify-otp-btn');
+      if (verifyBtn) verifyBtn.disabled = getOTPValue().length !== 6;
     });
 
     input.addEventListener('keydown', function (e) {

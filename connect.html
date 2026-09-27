@@ -29,19 +29,19 @@
 
       <div class="field">
         <label for="requester-name">Your name</label>
-        <input type="text" id="requester-name" placeholder="e.g. Priya Sharma">
+        <input type="text" id="requester-name" placeholder="e.g. Security Guard Vikram / Delivery Agent">
       </div>
 
       <div class="field">
-        <label for="requester-purpose">Reason for request (optional)</label>
-        <textarea id="requester-purpose" placeholder="e.g. Verifying identity for loan application"></textarea>
+        <label for="requester-purpose">Reason for request</label>
+        <textarea id="requester-purpose" placeholder="e.g. Checkpoint Alpha — Visitor Identity Verification for Flat 402"></textarea>
       </div>
 
-      <div class="card card-no-border">
+      <div class="card" style="background:#F0F9FF;border:1px solid #BAE6FD;">
         <div class="row items-start gap-10">
-          <span class="icon-sm text-primary mt-1" id="note-icon"></span>
-          <p class="text-xs text-primary-dark leading-6">
-            The vault owner will be asked to approve this with their PIN before any document is shared.
+          <span class="icon-sm text-cyan mt-1" id="note-icon"></span>
+          <p class="text-xs" style="color:var(--text-secondary);line-height:1.5;">
+            The resident will be prompted to approve this request via secret PIN. All verified sessions are cryptographically anchored to the apartment blockchain ledger.
           </p>
         </div>
       </div>
@@ -63,6 +63,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/blockchain.js"></script>
 <script src="js/app.js"></script>
 <script src="js/emailjs.js"></script>
 <script src="js/connection.js"></script>

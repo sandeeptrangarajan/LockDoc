@@ -373,9 +373,9 @@ LD.ui.checkRegistration = function(){
     if (typeof LD.email !== 'undefined' && LD.email.isVerified()) {
       return; // Legacy flow - allow access
     }
-    // If on backend server port, redirect to login
-    if (window.location.port === '5000') {
-      window.location.href = 'login.html';
+    // If on backend server (HTTP), redirect to login
+    if (window.location.protocol.startsWith('http') && window.location.port) {
+      window.location.href = 'public/login.html';
     } else {
       // For direct file access, check localStorage user
       if (!LD.store.get(LD.KEYS.USER) || !LD.store.get(LD.KEYS.USER).isVerified) {
@@ -410,7 +410,10 @@ LD.ui.renderAuditLogs = function(containerId, limit){
       document_approved: 'check',
       document_denied: 'x',
       viewer_opened: 'eye',
-      session_expired: 'clock'
+      session_expired: 'clock',
+      blockchain_tamper_alert: 'shield',
+      blockchain_anchored: 'lock',
+      document_anchored: 'lock'
     };
     var colorMap = {
       qr_generated: 'blue',
@@ -422,19 +425,34 @@ LD.ui.renderAuditLogs = function(containerId, limit){
       document_approved: 'green',
       document_denied: 'red',
       viewer_opened: 'blue',
-      session_expired: 'red'
+      session_expired: 'red',
+      blockchain_tamper_alert: 'red',
+      blockchain_anchored: 'green',
+      document_anchored: 'blue'
     };
     var icon = iconMap[log.type] || 'shield';
     var color = colorMap[log.type] || 'blue';
 
     return '<div class="list-row">' +
       '<div class="icon-tile ' + color + '">' + (LD.icons[icon] || LD.icons.shield) + '</div>' +
-      '<div class="flex-1"><p class="text-sm font-medium">' + log.title + '</p><p class="text-muted text-xs">' + LD.ui.timeAgo(log.at) + '</p></div>' +
+      '<div class="flex-1"><p class="text-sm font-medium">' + log.title + '</p><p class="text-muted text-xs">' + (log.detail ? log.detail + ' &middot; ' : '') + LD.ui.timeAgo(log.at) + '</p></div>' +
       '</div>';
   }).join('');
 };
 
 LD.ui.categoryIcon = function(catId){
-  const map = { identity: 'id', financial: 'bank', education: 'cap', property: 'home2', insurance: 'shield', other: 'folder' };
+  const map = {
+    identity: 'id',
+    apartment: 'home2',
+    vehicles: 'shield',
+    visitors: 'users',
+    clearance: 'folder',
+    emergency: 'shield',
+    financial: 'bank',
+    education: 'cap',
+    property: 'home2',
+    insurance: 'shield',
+    other: 'folder'
+  };
   return map[catId] || 'folder';
 };

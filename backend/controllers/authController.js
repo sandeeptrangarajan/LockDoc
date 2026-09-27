@@ -186,35 +186,50 @@ exports.register = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+    const cleanOtp = otp ? String(otp).trim() : '';
 
-    if (!email || !otp) {
+    if (!cleanEmail || !cleanOtp) {
       return res.status(400).json({
         success: false,
         message: 'Email and OTP are required.'
       });
     }
 
-    // Find the OTP entry
+    console.log(`🔍 Verifying OTP for ${cleanEmail}. Entered: "${cleanOtp}"`);
+
+    // Find the latest active registration OTP entry for this email
     const otpEntry = await Otp.findOne({
-      email: email.toLowerCase(),
-      code: otp,
+      email: cleanEmail,
       type: 'registration',
       isUsed: false
-    });
+    }).sort({ createdAt: -1 });
 
     if (!otpEntry) {
+      console.warn(`⚠️ No active registration OTP found in DB for ${cleanEmail}`);
       return res.status(400).json({
         success: false,
-        message: 'Invalid OTP. Please request a new code.'
+        message: 'Invalid or expired OTP. Please request a new code.'
       });
     }
 
     if (otpEntry.isExpired()) {
       otpEntry.isUsed = true;
       await otpEntry.save();
+      console.warn(`⚠️ OTP for ${cleanEmail} has expired`);
       return res.status(400).json({
         success: false,
         message: 'OTP has expired. Please request a new code.'
+      });
+    }
+
+    if (String(otpEntry.code).trim() !== cleanOtp) {
+      otpEntry.attempts = (otpEntry.attempts || 0) + 1;
+      await otpEntry.save();
+      console.warn(`⚠️ Mismatch for ${cleanEmail}: entered "${cleanOtp}", expected "${otpEntry.code}"`);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP code. Please enter the exact code sent to your email.'
       });
     }
 
@@ -224,8 +239,24 @@ exports.verifyOTP = async (req, res) => {
     await otpEntry.save();
 
     // Find and update the user
-    const user = await User.findOne({ email: email.toLowerCase(), isVerified: false });
+    let user = await User.findOne({ email: cleanEmail, isVerified: false });
     if (!user) {
+      user = await User.findOne({ email: cleanEmail });
+      if (user && user.isVerified) {
+        const token = generateToken(user);
+        return res.status(200).json({
+          success: true,
+          message: 'Account is already verified. You can now login.',
+          token,
+          user: {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role,
+            lockdocId: user.lockdocId
+          }
+        });
+      }
       return res.status(400).json({
         success: false,
         message: 'Registration session expired. Please start again.'
@@ -464,7 +495,7 @@ exports.sendOTP = async (req, res) => {
     }
 
     const otpType = type || 'password_reset';
-    if (!['password_reset', 'new_device_login', 'email_change'].includes(otpType)) {
+    if (!['registration', 'password_reset', 'new_device_login', 'email_change'].includes(otpType)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid OTP type.'

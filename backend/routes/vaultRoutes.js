@@ -11,7 +11,9 @@ const { multerUpload } = require('../services/fileStorageService');
 router.use(authMiddleware);
 
 router.get('/me', vaultController.getMyVaults);
+router.get('/my', vaultController.getMyVaults);
 router.get('/me/documents', vaultController.getMyDocuments);
+router.get('/my/documents', vaultController.getMyDocuments);
 router.post('/create', multerUpload.array('documents', 12), vaultController.createVault);
 router.get('/:vaultId', vaultController.getVault);
 router.get('/:vaultId/qrcode', vaultController.getVaultQrHandler);

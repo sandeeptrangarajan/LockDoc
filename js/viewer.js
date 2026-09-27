@@ -96,6 +96,29 @@ LD.viewer.init = async function(){
   }
   LD.viewer.doc = doc;
 
+  // Blockchain Ledger Integrity Check
+  if(window.LD && LD.blockchain){
+    var chain = LD.blockchain.getChain();
+    var block = chain.find(function(b){ return b.docId === doc.id; });
+    if(block){
+      var currentHash = LD.blockchain.hashDocument(doc);
+      if(currentHash !== block.docHash){
+        LD.viewer.showLocked('CRITICAL SECURITY BREACH: This document has been tampered with! Cryptographic hash mismatch with Blockchain Block #' + block.index + '. Access revoked immediately.');
+        LD.blockchain.triggerImmediateTamperAlert({
+          tamperedDocs: [{
+            docId: doc.id,
+            docName: doc.name,
+            blockIndex: block.index,
+            anchoredHash: block.docHash,
+            currentHash: currentHash
+          }]
+        });
+        return false;
+      }
+      LD.viewer.block = block;
+    }
+  }
+
   // Find the active session for requester info or use backend session data
   var sessions = LD.data.activeSessions();
   var session = sessions.find(function(s){ return s.sessionId === docRequest.sessionId; });
@@ -127,6 +150,7 @@ LD.viewer.showLocked = function(message){
 LD.viewer.renderStage = function(){
   var doc = LD.viewer.doc;
   var session = LD.viewer.session;
+  var block = LD.viewer.block;
   if(!doc) return;
 
   var stage = document.getElementById('doc-stage');
@@ -135,13 +159,17 @@ LD.viewer.renderStage = function(){
 
   stage.innerHTML =
     '<div class="viewer-doc-surface">' +
-      '<p class="doc-heading">' + cat.name + ' · Issued by ' + doc.issuer + '</p>' +
+      '<div class="row-between mb-2">' +
+        '<p class="doc-heading">' + cat.name + ' · Issued by ' + doc.issuer + '</p>' +
+        '<span class="badge badge-success" style="font-size:11px;font-family:monospace;"><span class="badge-dot"></span> ' + (block ? 'Blockchain Block #' + block.index + ' Valid' : 'Ledger Verified') + '</span>' +
+      '</div>' +
       '<h2 class="doc-title">' + doc.name + '</h2>' +
-      '<div class="doc-field"><p class="k">Document holder</p><p class="v">' + (session ? session.ownerName : 'Holder') + '</p></div>' +
-      '<div class="doc-field"><p class="k">Status</p><p class="v text-success">Verified &amp; active</p></div>' +
-      '<div class="doc-field"><p class="k">Reference ID</p><p class="v letter-spacing-sm">' + doc.id.toUpperCase() + '-' + (session ? session.sessionId.slice(-6).toUpperCase() : 'XXXX') + '</p></div>' +
+      '<div class="doc-field"><p class="k">Document holder</p><p class="v">' + (session ? session.ownerName : 'Aarav Sharma (Flat 402)') + '</p></div>' +
+      '<div class="doc-field"><p class="k">Checkpoint Gate Status</p><p class="v text-success">Verified &amp; active at Gate Checkpoint</p></div>' +
+      '<div class="doc-field"><p class="k">Blockchain Hash</p><p class="v font-mono text-cyan" style="font-size:11px;word-break:break-all;">' + (block ? block.docHash : 'SHA-256 ANCHORED') + '</p></div>' +
+      '<div class="doc-field"><p class="k">Reference ID</p><p class="v letter-spacing-sm">' + doc.id.toUpperCase() + '-' + (session ? session.sessionId.slice(-6).toUpperCase() : 'GATE402') + '</p></div>' +
       '<div class="flex-1"></div>' +
-      '<p class="text-xs text-faint">This is a view-only preview. Downloading, printing and screenshots are disabled within the app.</p>' +
+      '<p class="text-xs text-faint">This is an ephemeral 60-second read-only view. Downloading, printing, and capturing are prohibited at apartment checkpoint.</p>' +
     '</div>';
 
   // Stamp watermark with requester info

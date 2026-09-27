@@ -1,7 +1,10 @@
 {
-  "name": "Arjun Mehta",
-  "initials": "AM",
-  "memberSince": "2026-01-01T00:00:00.000Z",
+  "name": "Aarav Sharma",
+  "initials": "AS",
+  "email": "aarav.sharma@skylineheights.org",
+  "role": "Resident (Flat 402 - Tower B)",
+  "apartment": "Skyline City Heights Apartments",
+  "memberSince": "2026-01-15T10:00:00.000Z",
   "pinSet": true,
-  "_note": "This file documents the shape of the seed data written into localStorage on first launch (see js/storage.js -> LD.init). It is not fetched at runtime to avoid file:// CORS issues; edit the seed constants in storage.js to change defaults."
+  "_note": "Seed user profile representing a resident at urban apartment security checkpoints."
 }
