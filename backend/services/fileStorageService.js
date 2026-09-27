@@ -7,8 +7,17 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 
-const UPLOAD_ROOT = path.join(__dirname, '..', 'uploads', 'vaults');
-fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+const os = require('os');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const UPLOAD_ROOT = isServerless
+  ? path.join(os.tmpdir(), 'uploads', 'vaults')
+  : path.join(__dirname, '..', 'uploads', 'vaults');
+
+try {
+  fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+} catch (err) {
+  console.warn('Upload directory initialization notice:', err.message);
+}
 
 const allowedMimeTypes = [
   'application/pdf',

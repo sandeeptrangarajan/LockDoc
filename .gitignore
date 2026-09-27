@@ -1,5 +1,9 @@
 node_modules/
 backend/node_modules/
 .env
+backend/.env
+.vercel/
+backend/uploads/vaults/
 *.log
 .DS_Store
+
