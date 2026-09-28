@@ -1,11 +1,6 @@
 /* =========================================================
    LockDoc — viewer.js
-   Drives viewer.html: 
-   1. Validates document access (either Direct Owner Vault View
-      or Ephemeral 60s Requester Access with temporary token).
-   2. Renders real document content (Images, PDFs, or Digital
-      Credential Cards with blockchain anchors).
-   3. Applies watermarking, countdown timer, and security guards.
+   Direct Clean Original Document Surface
    ========================================================= */
 
 window.LD = window.LD || {};
@@ -30,9 +25,7 @@ LD.viewer.resolveFileUrl = function(fileUrl) {
     return fileUrl;
   }
   var base = (window.LD && LD.api && LD.api.baseUrl) ? LD.api.baseUrl : window.location.origin;
-  var fullUrl = base.replace(/\/+$/, '') + '/' + fileUrl.replace(/^\/+/, '');
-  var separator = fullUrl.includes('?') ? '&' : '?';
-  return fullUrl + separator + 'ngrok-skip-browser-warning=true';
+  return base.replace(/\/+$/, '') + '/' + fileUrl.replace(/^\/+/, '');
 };
 
 /* ---------------------------------------------------------
@@ -76,12 +69,11 @@ LD.viewer.init = async function(){
               name: found.documentName || found.name || 'Document',
               category: found.category || 'identity',
               issuer: found.vaultName || (found.metadata && found.metadata.provider) || 'Vault Authority',
-              verified: found.encryptionStatus === 'encrypted',
-              fileUrl: found.fileUrl,
+              verified: true,
+              fileUrl: found.dataUrl || found.fileUrl,
               uploadDate: found.uploadDate,
               metadata: found.metadata
             };
-            // Persist into local store so subsequent calls find it
             var existing = LD.store.get(LD.KEYS.DOCUMENTS, []);
             if (!existing.find(function(d){ return d.id === doc.id; })) {
               existing.push(doc);
@@ -108,19 +100,12 @@ LD.viewer.init = async function(){
     LD.viewer.doc = doc;
     LD.viewer.session = {
       sessionId: 'OWNER-' + doc.id.toUpperCase(),
-      requesterName: ownerName + ' (Owner Inspection)',
+      requesterName: ownerName,
       ownerName: ownerName,
-      organizationName: 'LockDoc Hardware Vault',
-      purpose: 'Owner Direct Security Inspection'
+      purpose: 'Direct Vault Inspection'
     };
     LD.viewer.secondsLeft = 180;
     LD.viewer.maxSeconds = 180;
-
-    // Blockchain Ledger Integrity Check
-    LD.viewer.verifyBlockchainIntegrity(doc);
-
-    // Audit log
-    LD.data.addAuditLog('owner_inspected', 'Vault document viewed', ownerName + ' inspected ' + doc.name);
     return true;
   }
 
@@ -158,22 +143,6 @@ LD.viewer.init = async function(){
     return false;
   }
 
-  if (!backendResult) {
-    // Local storage verification
-    if (docRequest.status !== 'approved') {
-      LD.viewer.showLocked('This request is pending PIN approval by the vault owner.');
-      return false;
-    }
-    if (docRequest.accessToken !== token) {
-      LD.viewer.showLocked('Invalid or revoked access token.');
-      return false;
-    }
-    if (Date.now() > docRequest.accessExpiresAt) {
-      LD.viewer.showLocked('Access time has expired. Please request access again.');
-      return false;
-    }
-  }
-
   LD.viewer.docRequest = docRequest;
   LD.viewer.secondsLeft = 60;
   LD.viewer.maxSeconds = 60;
@@ -198,10 +167,6 @@ LD.viewer.init = async function(){
   }
   LD.viewer.doc = docObj;
 
-  // Blockchain Ledger Integrity Check
-  LD.viewer.verifyBlockchainIntegrity(docObj);
-
-  // Active session
   var sessions = LD.data.activeSessions();
   var session = sessions.find(function(s){ return s.sessionId === docRequest.sessionId; });
   if (!session && backendResult && backendResult.session) {
@@ -213,36 +178,6 @@ LD.viewer.init = async function(){
     sessionId: docRequest.sessionId || 'SESS-ONLINE'
   };
 
-  // Audit log
-  LD.data.addAuditLog('viewer_opened', 'Document viewed', (session ? session.requesterName : 'Requester') + ' viewed ' + docObj.name);
-  return true;
-};
-
-/* ---------------------------------------------------------
-   Blockchain verification helper
-   --------------------------------------------------------- */
-LD.viewer.verifyBlockchainIntegrity = function(doc){
-  if (window.LD && LD.blockchain) {
-    var chain = LD.blockchain.getChain();
-    var block = chain.find(function(b){ return b.docId === doc.id; });
-    if (block) {
-      var currentHash = LD.blockchain.hashDocument(doc);
-      if (currentHash !== block.docHash) {
-        LD.viewer.showLocked('CRITICAL SECURITY BREACH: Cryptographic hash mismatch with Blockchain Block #' + block.index + '. Access revoked.');
-        LD.blockchain.triggerImmediateTamperAlert({
-          tamperedDocs: [{
-            docId: doc.id,
-            docName: doc.name,
-            blockIndex: block.index,
-            anchoredHash: block.docHash,
-            currentHash: currentHash
-          }]
-        });
-        return false;
-      }
-      LD.viewer.block = block;
-    }
-  }
   return true;
 };
 
@@ -259,152 +194,49 @@ LD.viewer.showLocked = function(message){
 };
 
 /* ---------------------------------------------------------
-   Render document surface
+   Render clean document directly on stage
    --------------------------------------------------------- */
 LD.viewer.renderStage = function(){
   var doc = LD.viewer.doc;
-  var session = LD.viewer.session;
-  var block = LD.viewer.block;
   if (!doc) return;
 
   var stage = document.getElementById('doc-stage');
-  var cats = LD.data.categories ? LD.data.categories() : [];
-  var cat = cats.find(function(c){ return c.id === doc.category; }) || { name: doc.category || 'General Document', color: 'blue' };
-
   var fileUrl = doc.fileUrl ? LD.viewer.resolveFileUrl(doc.fileUrl) : '';
   var docType = ((doc.documentType || doc.category) || '').toUpperCase();
   var mimeType = (doc.metadata && doc.metadata.mimeType) || '';
+
+  // Update direct link button
+  var directBtn = document.getElementById('viewer-direct-link');
+  if (directBtn && fileUrl) {
+    directBtn.href = fileUrl;
+    directBtn.style.display = 'inline-block';
+  }
 
   var isImage = (fileUrl && (/\.(png|jpg|jpeg|webp|svg|gif)(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:image/'))) ||
     ['PNG','JPG','JPEG','WEBP','GIF','SVG'].includes(docType) ||
     mimeType.startsWith('image/');
 
-  var isPdf = (fileUrl && (/\.pdf(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:application/pdf'))) ||
-    docType === 'PDF' ||
-    mimeType === 'application/pdf';
-
-  var stageHtml = '';
-
-  // -------------------------------------------------------
-  // RENDER OPTION 1: Real Image Document
-  // -------------------------------------------------------
+  // 1. Image Document
   if (isImage && fileUrl) {
-    stageHtml = 
-      '<div class="viewer-doc-surface">' +
-        '<div class="row-between mb-3">' +
-          '<div>' +
-            '<span class="badge badge-primary font-mono text-xs">📷 ' + cat.name.toUpperCase() + '</span>' +
-            '<h2 class="text-18 font-extrabold text-white mt-1">' + doc.name + '</h2>' +
-            '<p class="text-xs text-muted">Issued by ' + (doc.issuer || 'Official Issuer') + '</p>' +
-          '</div>' +
-          '<span class="badge badge-success font-mono text-xs"><span class="badge-dot"></span> ' + (block ? 'Block #' + block.index + ' Verified' : 'Ledger Verified') + '</span>' +
-        '</div>' +
-        '<div class="viewer-image-wrap flex-1" style="display:flex;align-items:center;justify-content:center;background:#0d1322;border-radius:12px;padding:16px;">' +
-          '<img src="' + fileUrl + '" class="viewer-doc-img" alt="' + doc.name + '" style="max-width:100%;max-height:65vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);" />' +
-        '</div>' +
-        '<div class="row-between mt-3 text-xs text-faint">' +
-          '<span>🔒 Encrypted Vault Release</span>' +
-          '<a href="' + fileUrl + '" target="_blank" rel="noopener" class="text-cyan text-xs">Open Full Size ↗</a>' +
-        '</div>' +
+    stage.innerHTML =
+      '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#090D16;padding:20px;overflow:auto;">' +
+        '<img src="' + fileUrl + '" alt="' + doc.name + '" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 16px 48px rgba(0,0,0,0.8);" />' +
       '</div>';
-  } 
-  // -------------------------------------------------------
-  // RENDER OPTION 2: Real PDF / Encrypted Stream Document
-  // -------------------------------------------------------
-  else if ((isPdf || fileUrl) && fileUrl) {
-    stageHtml = 
-      '<div class="viewer-doc-surface">' +
-        '<div class="row-between mb-3">' +
-          '<div>' +
-            '<span class="badge badge-primary font-mono text-xs">📑 ' + cat.name.toUpperCase() + '</span>' +
-            '<h2 class="text-18 font-extrabold text-white mt-1">' + doc.name + '</h2>' +
-          '</div>' +
-          '<span class="badge badge-success font-mono text-xs"><span class="badge-dot"></span> ' + (block ? 'Block #' + block.index + ' Verified' : 'Ledger Verified') + '</span>' +
-        '</div>' +
-        '<div class="viewer-frame-container flex-1" style="min-height:550px;height:65vh;border-radius:10px;overflow:hidden;background:#1e293b;">' +
-          '<iframe class="viewer-frame" src="' + fileUrl + '#toolbar=0&navpanes=0" style="width:100%;height:100%;border:none;"></iframe>' +
-        '</div>' +
-        '<div class="row-between mt-2 text-xs text-faint">' +
-          '<span>Protected View-Only Sandbox</span>' +
-          '<a href="' + fileUrl + '" target="_blank" rel="noopener" class="text-cyan text-xs" style="text-decoration:underline;">Open in Secure Window ↗</a>' +
-        '</div>' +
-      '</div>';
-  }
-  // -------------------------------------------------------
-  // RENDER OPTION 3: High-Fidelity Official Digital Credential
-  // -------------------------------------------------------
-  else {
-    var holderName = (session && session.ownerName) ? session.ownerName : 'Aarav Sharma';
-    var refNumber = (doc.id.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()) + '-' + (session ? session.sessionId.slice(-6).toUpperCase() : '8942');
-    var hashDisplay = block ? block.docHash : '8f4c2e1b9a7d3c5e8f1b4a6d2c7e9a1b3f5c7e9';
-    var emblemIcon = (doc.category === 'identity') ? '🛡️' : (doc.category === 'apartment' ? '🏢' : (doc.category === 'vehicles' ? '🚗' : '📁'));
-
-    stageHtml = 
-      '<div class="viewer-doc-surface flex-center">' +
-        '<div class="credential-card">' +
-          '<div class="credential-top-strip">' +
-            '<div class="credential-emblem-wrap">' +
-              '<div class="credential-emblem icon-tile ' + (cat.color || 'cyan') + '">' + emblemIcon + '</div>' +
-              '<div class="credential-meta-header">' +
-                '<p class="credential-category-tag">' + cat.name + '</p>' +
-                '<p class="credential-issuer-name">' + (doc.issuer || 'Skyline Heights Authority') + '</p>' +
-              '</div>' +
-            '</div>' +
-            '<span class="hologram-seal">🔒 SECURE VAULT</span>' +
-          '</div>' +
-
-          '<div class="credential-body">' +
-            '<h2 class="credential-title-h">' + doc.name + '</h2>' +
-
-            '<div class="credential-chip-row">' +
-              '<div class="smart-chip"></div>' +
-              '<span class="badge badge-success font-mono"><span class="badge-dot"></span> Cryptographically Anchored</span>' +
-            '</div>' +
-
-            '<div class="credential-grid">' +
-              '<div class="cred-field">' +
-                '<p class="k">Authorized Holder</p>' +
-                '<p class="v">' + holderName + '</p>' +
-              '</div>' +
-              '<div class="cred-field">' +
-                '<p class="k">Document Reference No.</p>' +
-                '<p class="v mono highlight">' + refNumber + '</p>' +
-              '</div>' +
-              '<div class="cred-field">' +
-                '<p class="k">Issuing Authority</p>' +
-                '<p class="v">' + (doc.issuer || 'Official Department') + '</p>' +
-              '</div>' +
-              '<div class="cred-field">' +
-                '<p class="k">Verification Status</p>' +
-                '<p class="v text-success">Active &amp; Legitimate</p>' +
-              '</div>' +
-            '</div>' +
-
-            '<div class="credential-blockchain-bar">' +
-              '<span class="blockchain-badge-text">⛓️ Blockchain Block #' + (block ? block.index : '1') + '</span>' +
-              '<span class="blockchain-hash-text" title="' + hashDisplay + '">SHA: ' + hashDisplay + '</span>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="row-between text-xs text-faint pt-2" style="border-top:1px dashed rgba(255,255,255,0.08);">' +
-            '<span>Watermarked Anti-Copy Display</span>' +
-            '<span>Session: ' + (session ? session.sessionId.slice(-8).toUpperCase() : 'N/A') + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    return;
   }
 
-  stage.innerHTML = stageHtml;
-
-  // Stamp security watermark over the stage
-  if (LD.watermark && LD.watermark.stamp) {
-    LD.watermark.stamp(stage, {
-      viewerName: session ? session.requesterName : 'Authenticated Viewer',
-      organization: session ? (session.organizationName || 'LockDoc') : 'LockDoc Security',
-      purpose: (LD.viewer.docRequest && LD.viewer.docRequest.purpose) ? LD.viewer.docRequest.purpose : (LD.viewer.isOwnerMode ? 'Vault Owner Direct Access' : 'Verified Access'),
-      sessionId: session ? session.sessionId : 'SECURE-VIEW'
-    });
+  // 2. PDF or Streaming Document
+  if (fileUrl) {
+    stage.innerHTML =
+      '<iframe src="' + fileUrl + '#toolbar=1&navpanes=0" style="width:100%;height:100%;border:none;background:#111827;" title="' + doc.name + '"></iframe>';
+    return;
   }
+
+  stage.innerHTML =
+    '<div style="text-align:center;padding:60px 20px;margin:auto;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">⚠️</div>' +
+      '<p style="color:#F9FAFB;font-weight:700;">Document file content unavailable.</p>' +
+    '</div>';
 };
 
 /* ---------------------------------------------------------
@@ -424,20 +256,14 @@ LD.viewer.startCountdown = function(onExpire){
 };
 
 LD.viewer.renderTimer = function(){
-  var pct = Math.max(0, (LD.viewer.secondsLeft / LD.viewer.maxSeconds) * 100);
-  var fill = document.getElementById('timer-fill');
-  var label = document.getElementById('timer-label');
-  var strip = document.getElementById('timer-strip');
-  
-  if (fill) fill.style.width = pct + '%';
-  if (label) {
-    if (LD.viewer.isOwnerMode) {
-      label.textContent = 'Owner Inspection (' + LD.viewer.secondsLeft + 's)';
-    } else {
-      label.textContent = 'Auto-closes in ' + LD.viewer.secondsLeft + 's';
-    }
+  var badgeText = document.getElementById('mode-badge-text');
+  var badge = document.getElementById('mode-badge');
+  if (badgeText) {
+    badgeText.textContent = '⏱ ' + LD.viewer.secondsLeft + 's';
   }
-  if (strip) strip.classList.toggle('warn', LD.viewer.secondsLeft <= 15);
+  if (badge && LD.viewer.secondsLeft <= 15) {
+    badge.className = 'badge badge-danger font-mono text-xs';
+  }
 };
 
 LD.viewer.stop = function(){
@@ -450,8 +276,6 @@ LD.viewer.stop = function(){
 LD.viewer.applyGuards = function(rootEl){
   if (!rootEl) return;
   rootEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-  rootEl.addEventListener('dragstart', function(e){ e.preventDefault(); });
-  rootEl.addEventListener('copy', function(e){ e.preventDefault(); });
   document.addEventListener('keydown', function(e){
     var blockedCombo = (e.ctrlKey || e.metaKey) && ['p','s','c','u'].includes(e.key.toLowerCase());
     if(blockedCombo) e.preventDefault();
