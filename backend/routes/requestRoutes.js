@@ -7,6 +7,11 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const requestController = require('../controllers/requestController');
 
+// ── Public routes (no auth needed — the access token is the credential) ──────
+// Must be declared BEFORE authMiddleware is applied so Express matches them first
+router.get('/document/access', requestController.validateAccess);
+
+// ── Authenticated routes ──────────────────────────────────────────────────────
 router.use(authMiddleware);
 
 router.post('/connection', requestController.createConnection);
@@ -20,7 +25,6 @@ router.post('/connection/:requestId/decline', requestController.declineConnectio
 router.post('/document', requestController.createDocumentRequest);
 router.get('/document', requestController.listDocumentRequests);
 router.get('/pending', requestController.listDocumentRequests);
-router.get('/document/access', requestController.validateAccess);
 router.get('/document/:requestId', requestController.getDocumentRequest);
 router.post('/document/:requestId/approve', requestController.approveDocument);
 router.post('/document/:requestId/deny', requestController.denyDocument);

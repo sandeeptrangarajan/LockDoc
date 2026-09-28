@@ -283,6 +283,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .text-right { text-align: right; }
 .w-full { width: 100%; }
 .overflow-x-auto { overflow-x: auto; }
+.hidden { display: none !important; }
+.flex-1 { flex: 1; }
+.flex-none { flex: none; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.icon-32 { font-size: 32px; line-height: 1; }
+.icon-44 { font-size: 44px; line-height: 1; }
 
 @media (min-width: 540px) {
   .grid-2 { gap: 16px; }
