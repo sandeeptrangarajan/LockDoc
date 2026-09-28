@@ -82,24 +82,48 @@ async function getUserVaults(userId) {
 
 async function getUserDocuments(userId) {
   const documents = await Document.find({ ownerId: userId }).populate('vaultId').sort({ uploadDate: -1 }).lean();
-  return documents.map(doc => ({
-    id: doc._id.toString(),
-    documentName: doc.documentName,
-    documentType: doc.documentType,
-    category: doc.category || doc.vaultId?.category || 'identity',
-    vaultName: doc.vaultName || doc.vaultId?.vaultName || 'Resident Credentials & Passes',
-    storagePath: doc.storagePath,
-    fileUrl: doc.fileUrl,
-    uploadDate: doc.uploadDate,
-    encryptionStatus: doc.encryptionStatus,
-    metadata: doc.metadata || {}
-  }));
+  return documents.map(doc => {
+    const mime = doc.metadata?.mimeType || (doc.documentType === 'PDF' ? 'application/pdf' : 'image/png');
+    const dataUrl = doc.fileData
+      ? (doc.fileData.startsWith('data:') ? doc.fileData : `data:${mime};base64,${doc.fileData}`)
+      : (doc.fileUrl && doc.fileUrl.startsWith('data:') ? doc.fileUrl : null);
+    const directFileUrl = dataUrl || doc.fileUrl || `/api/vaults/documents/${doc._id}/file`;
+
+    return {
+      id: doc._id.toString(),
+      _id: doc._id.toString(),
+      documentName: doc.documentName,
+      documentType: doc.documentType,
+      category: doc.category || doc.vaultId?.category || 'identity',
+      vaultName: doc.vaultName || doc.vaultId?.vaultName || 'Resident Credentials & Passes',
+      storagePath: doc.storagePath,
+      fileUrl: directFileUrl,
+      dataUrl: dataUrl,
+      uploadDate: doc.uploadDate,
+      encryptionStatus: doc.encryptionStatus,
+      metadata: doc.metadata || {}
+    };
+  });
 }
 
 async function getVaultById(userId, vaultId) {
   const vault = await Vault.findOne({ ownerId: userId, _id: vaultId }).lean();
   if (!vault) return null;
-  const documents = await Document.find({ vaultId: vault._id }).sort({ uploadDate: -1 }).lean();
+  const rawDocs = await Document.find({ vaultId: vault._id }).sort({ uploadDate: -1 }).lean();
+  const documents = rawDocs.map(doc => {
+    const mime = doc.metadata?.mimeType || (doc.documentType === 'PDF' ? 'application/pdf' : 'image/png');
+    const dataUrl = doc.fileData
+      ? (doc.fileData.startsWith('data:') ? doc.fileData : `data:${mime};base64,${doc.fileData}`)
+      : (doc.fileUrl && doc.fileUrl.startsWith('data:') ? doc.fileUrl : null);
+    const directFileUrl = dataUrl || doc.fileUrl || `/api/vaults/documents/${doc._id}/file`;
+
+    return {
+      ...doc,
+      id: doc._id.toString(),
+      fileUrl: directFileUrl,
+      dataUrl: dataUrl
+    };
+  });
   return { vault, documents };
 }
 

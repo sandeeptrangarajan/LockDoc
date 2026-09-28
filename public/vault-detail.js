@@ -70,10 +70,12 @@ function renderDocuments(vaultId, documents) {
     return;
   }
   list.innerHTML = documents.map(doc => {
-    return '<div class="doc-row" data-doc-id="' + doc._id + '">' +
+    const docId = doc._id || doc.id;
+    return '<div class="doc-row" data-doc-id="' + docId + '">' +
       '<div class="doc-icon">' + docIcon(doc.documentType) + '</div>' +
-      '<div class="doc-info"><p>' + doc.documentName + '</p><p class="text-faint text-xs">' + doc.documentType + ' · ' + new Date(doc.uploadDate).toLocaleDateString() + '</p></div>' +
+      '<div class="doc-info" style="cursor:pointer;" onclick="window.location.href=\'viewer.html?doc=' + docId + '\'"><p>' + doc.documentName + '</p><p class="text-faint text-xs">' + doc.documentType + ' · ' + new Date(doc.uploadDate).toLocaleDateString() + '</p></div>' +
       '<div class="doc-actions">' +
+        '<a class="icon-btn" href="viewer.html?doc=' + docId + '" title="View Document">👁️</a>' +
         '<button class="icon-btn" data-action="rename" title="Rename">✏️</button>' +
         '<button class="icon-btn danger" data-action="delete" title="Delete">🗑️</button>' +
       '</div>' +
