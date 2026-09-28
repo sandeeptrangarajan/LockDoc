@@ -327,6 +327,9 @@ async function getDocumentRequestById(user, requestId) {
 }
 
 async function validateDocumentAccess(requestId, token) {
+  if (!requestId || !token || !mongoose.isValidObjectId(requestId)) {
+    return null;
+  }
   const request = await DocumentRequest.findOne({ _id: requestId, accessToken: token, status: 'approved' })
     .lean();
   if (!request) {
