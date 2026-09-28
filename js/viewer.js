@@ -135,7 +135,8 @@ LD.viewer.init = async function(){
   var docRequest = LD.data.getDocumentRequest(requestId);
   var backendResult = null;
 
-  if (LD.data.isJwtAuthenticated() && LD.api && LD.api.validateDocumentAccess) {
+  // Validate with backend (No JWT required — the requestId + token are the credential)
+  if (LD.api && LD.api.validateDocumentAccess) {
     try {
       var response = await LD.api.validateDocumentAccess(requestId, token);
       if (response && response.success && response.result) {
@@ -185,7 +186,7 @@ LD.viewer.init = async function(){
       category: backendResult.document.category,
       issuer: backendResult.document.issuer,
       verified: true,
-      fileUrl: backendResult.document.fileUrl,
+      fileUrl: backendResult.document.dataUrl || backendResult.document.fileUrl,
       uploadDate: backendResult.document.uploadDate,
       metadata: backendResult.document.metadata
     };
@@ -271,15 +272,23 @@ LD.viewer.renderStage = function(){
   var cat = cats.find(function(c){ return c.id === doc.category; }) || { name: doc.category || 'General Document', color: 'blue' };
 
   var fileUrl = doc.fileUrl ? LD.viewer.resolveFileUrl(doc.fileUrl) : '';
-  var isImage = fileUrl && (/\.(png|jpg|jpeg|webp|svg|gif)(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:image/'));
-  var isPdf = fileUrl && (/\.pdf(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:application/pdf'));
+  var docType = ((doc.documentType || doc.category) || '').toUpperCase();
+  var mimeType = (doc.metadata && doc.metadata.mimeType) || '';
+
+  var isImage = (fileUrl && (/\.(png|jpg|jpeg|webp|svg|gif)(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:image/'))) ||
+    ['PNG','JPG','JPEG','WEBP','GIF','SVG'].includes(docType) ||
+    mimeType.startsWith('image/');
+
+  var isPdf = (fileUrl && (/\.pdf(\?.*)?$/i.test(fileUrl) || fileUrl.startsWith('data:application/pdf'))) ||
+    docType === 'PDF' ||
+    mimeType === 'application/pdf';
 
   var stageHtml = '';
 
   // -------------------------------------------------------
   // RENDER OPTION 1: Real Image Document
   // -------------------------------------------------------
-  if (isImage) {
+  if (isImage && fileUrl) {
     stageHtml = 
       '<div class="viewer-doc-surface">' +
         '<div class="row-between mb-3">' +
@@ -290,19 +299,19 @@ LD.viewer.renderStage = function(){
           '</div>' +
           '<span class="badge badge-success font-mono text-xs"><span class="badge-dot"></span> ' + (block ? 'Block #' + block.index + ' Verified' : 'Ledger Verified') + '</span>' +
         '</div>' +
-        '<div class="viewer-image-wrap flex-1">' +
-          '<img src="' + fileUrl + '" class="viewer-doc-img" alt="' + doc.name + '" />' +
+        '<div class="viewer-image-wrap flex-1" style="display:flex;align-items:center;justify-content:center;background:#0d1322;border-radius:12px;padding:16px;">' +
+          '<img src="' + fileUrl + '" class="viewer-doc-img" alt="' + doc.name + '" style="max-width:100%;max-height:65vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);" />' +
         '</div>' +
         '<div class="row-between mt-3 text-xs text-faint">' +
           '<span>🔒 Encrypted Vault Release</span>' +
-          '<span class="font-mono text-cyan">REF: ' + doc.id.toUpperCase() + '</span>' +
+          '<a href="' + fileUrl + '" target="_blank" rel="noopener" class="text-cyan text-xs">Open Full Size ↗</a>' +
         '</div>' +
       '</div>';
   } 
   // -------------------------------------------------------
-  // RENDER OPTION 2: Real PDF Document
+  // RENDER OPTION 2: Real PDF / Encrypted Stream Document
   // -------------------------------------------------------
-  else if (isPdf) {
+  else if ((isPdf || fileUrl) && fileUrl) {
     stageHtml = 
       '<div class="viewer-doc-surface">' +
         '<div class="row-between mb-3">' +
@@ -312,8 +321,8 @@ LD.viewer.renderStage = function(){
           '</div>' +
           '<span class="badge badge-success font-mono text-xs"><span class="badge-dot"></span> ' + (block ? 'Block #' + block.index + ' Verified' : 'Ledger Verified') + '</span>' +
         '</div>' +
-        '<div class="viewer-frame-container flex-1">' +
-          '<iframe class="viewer-frame" src="' + fileUrl + '"></iframe>' +
+        '<div class="viewer-frame-container flex-1" style="min-height:550px;height:65vh;border-radius:10px;overflow:hidden;background:#1e293b;">' +
+          '<iframe class="viewer-frame" src="' + fileUrl + '#toolbar=0&navpanes=0" style="width:100%;height:100%;border:none;"></iframe>' +
         '</div>' +
         '<div class="row-between mt-2 text-xs text-faint">' +
           '<span>Protected View-Only Sandbox</span>' +

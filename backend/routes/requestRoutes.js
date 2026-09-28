@@ -10,6 +10,8 @@ const requestController = require('../controllers/requestController');
 // ── Public routes (no auth needed — the access token is the credential) ──────
 // Must be declared BEFORE authMiddleware is applied so Express matches them first
 router.get('/document/access', requestController.validateAccess);
+router.get('/document/file', requestController.streamDocumentFile);
+router.get('/document/:requestId/file', requestController.streamDocumentFile);
 
 // ── Authenticated routes ──────────────────────────────────────────────────────
 router.use(authMiddleware);

@@ -7,3 +7,5 @@ backend/uploads/vaults/
 *.log
 .DS_Store
 
+
+.vercel

@@ -2,6 +2,7 @@
    LockDoc — Vault Controller
    Handles vault creation, document upload metadata, and vault retrieval.
    ============================================================ */
+const Document = require('../models/Document');
 const {
   createVaultForUser,
   getUserVaults,
@@ -157,6 +158,41 @@ async function deleteDocumentHandler(req, res) {
   }
 }
 
+async function streamVaultDocument(req, res) {
+  try {
+    const { documentId } = req.params;
+    const userId = req.userId || req.user._id;
+    const doc = await Document.findOne({ _id: documentId, ownerId: userId });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Document not found.' });
+    }
+
+    const mime = doc.metadata?.mimeType || (doc.documentType === 'PDF' ? 'application/pdf' : 'image/png');
+
+    if (doc.fileData) {
+      let base64 = doc.fileData;
+      if (base64.includes('base64,')) {
+        base64 = base64.split('base64,')[1];
+      }
+      const buffer = Buffer.from(base64, 'base64');
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(doc.documentName)}"`);
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.send(buffer);
+    }
+
+    if (doc.fileUrl && (doc.fileUrl.startsWith('http://') || doc.fileUrl.startsWith('https://'))) {
+      return res.redirect(doc.fileUrl);
+    }
+
+    return res.status(404).json({ success: false, message: 'Document content unavailable.' });
+  } catch (err) {
+    console.error('Failed to stream vault document:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to retrieve document.' });
+  }
+}
+
 module.exports = {
   getMyVaults,
   getMyDocuments,
@@ -166,5 +202,6 @@ module.exports = {
   regenerateVaultQrHandler,
   addDocuments,
   renameDocumentHandler,
-  deleteDocumentHandler
+  deleteDocumentHandler,
+  streamVaultDocument
 };

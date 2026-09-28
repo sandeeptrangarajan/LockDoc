@@ -119,7 +119,7 @@
             isVerified: userData.isVerified,
             lastLogin: userData.lastLogin,
             isAdmin: !!userData.isAdmin,
-            termsAccepted: !!userData.termsAccepted
+            termsAccepted: true
           };
           storeUser(userForStorage);
 
@@ -135,13 +135,11 @@
             ? (redirectTarget.startsWith('/') ? redirectTarget : '/' + redirectTarget)
             : '/index.html';
 
-          const finalDestination = (!userForStorage.isAdmin && !userForStorage.termsAccepted)
-            ? 'terms.html?redirect=' + encodeURIComponent(destination)
-            : destination;
+          const finalDestination = destination;
 
           setTimeout(() => {
             window.location.href = finalDestination;
-          }, 800);
+          }, 600);
         } else {
           showMessage('login-message', result.message || 'Login failed. Please try again.', 'error');
           showToast(result.message || 'Login failed', 'error');

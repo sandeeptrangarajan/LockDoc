@@ -347,6 +347,13 @@ async function validateDocumentAccess(requestId, token) {
     return null;
   }
 
+  const mime = document.metadata?.mimeType || (document.documentType === 'PDF' ? 'application/pdf' : 'image/png');
+  const dataUrl = document.fileData
+    ? (document.fileData.startsWith('data:') ? document.fileData : `data:${mime};base64,${document.fileData}`)
+    : (document.fileUrl && document.fileUrl.startsWith('data:') ? document.fileUrl : null);
+
+  const fileEndpoint = `/api/requests/document/file?requestId=${requestId}&token=${token}`;
+
   return {
     request,
     document: {
@@ -356,7 +363,9 @@ async function validateDocumentAccess(requestId, token) {
       category: document.vaultId ? document.vaultId.toString() : 'unknown',
       issuer: document.metadata?.provider || 'Vault',
       ownerName: owner.fullName,
-      fileUrl: document.fileUrl,
+      fileUrl: fileEndpoint,
+      dataUrl: dataUrl,
+      rawFileUrl: document.fileUrl,
       uploadDate: document.uploadDate,
       metadata: document.metadata || {}
     },

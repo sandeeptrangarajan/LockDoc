@@ -167,12 +167,13 @@ LD.app.loadVaultDocuments = async function(){
       var mapped = result.documents.map(function(doc){
         var categoryId = (doc.category || 'other').toString().toLowerCase();
         var known = LD.data.categories().find(function(c){ return c.id === categoryId; });
-        if (!known) categoryId = 'other';
+        if (!known) categoryId = 'identity';
         return {
           id: doc.id,
           name: doc.documentName,
           category: categoryId,
-          issuer: doc.vaultName || doc.metadata.provider || 'Vault',
+          vaultName: doc.vaultName || 'Resident Credentials & Passes',
+          issuer: doc.vaultName || doc.metadata.provider || 'Skyline Heights Authority',
           verified: doc.encryptionStatus === 'encrypted',
           fileUrl: doc.fileUrl,
           uploadDate: doc.uploadDate,

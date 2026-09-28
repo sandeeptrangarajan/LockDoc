@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Viewing Document — LockDoc</title>
+<title>Secure Document Surface — LockDoc</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/viewer.css">
@@ -15,34 +15,37 @@
 <div class="app viewer-app" id="viewer-root">
 
   <div class="viewer-topbar">
-    <button class="close-btn" id="close-viewer-btn" aria-label="Close"><span class="i" id="close-icon"></span></button>
-    <div class="flex-1">
-      <p class="font-bold text-16">Secure Document Surface</p>
-      <p class="text-xs text-faint">Read Only &middot; Anti-Copy Protected &middot; Watermarked</p>
+    <button class="close-btn" id="close-viewer-btn" aria-label="Close Vault Surface"><span class="i" id="close-icon">✕</span></button>
+    <div class="flex-1 topbar-meta">
+      <h1 class="font-extrabold text-16 text-white" id="viewer-title">Secure Document Surface</h1>
+      <p class="text-xs text-muted" id="viewer-subtitle">Read Only · Anti-Copy Shield · Watermarked</p>
     </div>
-    <span class="badge badge-primary">
-      <span class="i icon-sm" id="lock-icon"></span> Hardware Lock
+    <span class="badge badge-primary" id="mode-badge">
+      <span class="i icon-sm" id="lock-icon"></span> <span id="mode-badge-text">Hardware Lock</span>
     </span>
   </div>
 
-  <div class="viewer-doc-tabs" id="doc-tabs"></div>
+  <div class="viewer-doc-tabs" id="doc-tabs" style="display:none;"></div>
 
   <div class="viewer-stage" id="doc-stage">
     <div class="viewer-locked-overlay hidden" id="locked-overlay">
-      <span class="icon-44" id="locked-icon"></span>
-      <p class="font-bold text-18" id="locked-message">Session Expired or Unavailable</p>
-      <a href="index.html" class="btn btn-primary btn-auto mt-4">Return to Vault Dashboard</a>
+      <div class="locked-icon-wrap">
+        <span class="icon-32" id="locked-icon">🔒</span>
+      </div>
+      <h3 class="text-18 font-extrabold text-white" id="locked-title">Access Restricted</h3>
+      <p id="locked-message">Session expired, invalid token, or document unavailable.</p>
+      <a href="index.html" class="btn btn-primary mt-4" style="width:auto;padding:10px 24px;">Return to Vault Dashboard</a>
     </div>
   </div>
 
   <div class="viewer-bottombar">
     <div class="timer-strip" id="timer-strip">
-      <span class="icon-sm" id="timer-icon"></span>
+      <span class="icon-sm" id="timer-icon">⏱️</span>
       <div class="track"><div class="fill" id="timer-fill" style="width:100%;"></div></div>
-      <span class="text-sm font-bold flex-none" id="timer-label">Auto-closes in 60s</span>
+      <span class="text-sm font-bold flex-none text-white" id="timer-label">Auto-closes in 60s</span>
     </div>
-    <p class="text-xs text-muted text-center" style="color:rgba(255,255,255,0.7);">
-      Authorized release for <strong id="viewer-requester-name" style="color:#fff;">—</strong> by <span id="viewer-owner-name" style="color:#fff;">—</span>. Session automatically self-destructs upon timer completion.
+    <p class="text-xs text-muted text-center" id="session-notice" style="color:rgba(255,255,255,0.7);line-height:1.5;">
+      Authorized release for <strong id="viewer-requester-name" style="color:#00F0FF;">—</strong> by <span id="viewer-owner-name" style="color:#10B981;">—</span>. Session automatically self-destructs upon timer completion.
     </p>
   </div>
 
@@ -58,10 +61,12 @@
 <script src="js/viewer.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async function(){
-  document.getElementById('close-icon').innerHTML = LD.icons.x;
-  document.getElementById('lock-icon').innerHTML = LD.icons.lock;
-  document.getElementById('timer-icon').innerHTML = LD.icons.clock;
-  document.getElementById('locked-icon').innerHTML = LD.icons.lock;
+  if (window.LD && LD.icons) {
+    document.getElementById('close-icon').innerHTML = LD.icons.x || '✕';
+    document.getElementById('lock-icon').innerHTML = LD.icons.lock || '🔒';
+    document.getElementById('timer-icon').innerHTML = LD.icons.clock || '⏱️';
+    document.getElementById('locked-icon').innerHTML = LD.icons.lock || '🔒';
+  }
 
   var ok = await LD.viewer.init();
   if(!ok) return;
@@ -69,25 +74,40 @@ document.addEventListener('DOMContentLoaded', async function(){
   var docRequest = LD.viewer.docRequest;
   var session = LD.viewer.session;
   var doc = LD.viewer.doc;
+  var isOwner = LD.viewer.isOwnerMode;
 
-  if(docRequest && session){
+  if (isOwner) {
+    document.getElementById('mode-badge-text').textContent = 'Owner Direct View';
+    document.getElementById('viewer-title').textContent = doc ? doc.name : 'Secure Document Surface';
+    document.getElementById('viewer-subtitle').textContent = 'Vault Owner Inspection Mode · Cryptographically Anchored';
+    document.getElementById('viewer-requester-name').textContent = session ? session.ownerName : 'Vault Owner';
+    document.getElementById('viewer-owner-name').textContent = 'Hardware Vault';
+    document.getElementById('session-notice').innerHTML = 
+      'Viewing as authenticated vault owner <strong>' + (session ? session.ownerName : 'Owner') + '</strong>. Anti-copy watermarking is active.';
+  } else if (session) {
     document.getElementById('viewer-requester-name').textContent = session.requesterName || 'Requester';
-    document.getElementById('viewer-owner-name').textContent = session.ownerName || 'Owner';
+    document.getElementById('viewer-owner-name').textContent = session.ownerName || 'Vault Owner';
+    if (doc) {
+      document.getElementById('viewer-title').textContent = doc.name;
+    }
   }
 
   LD.viewer.renderStage();
-
   LD.viewer.applyGuards(document.getElementById('viewer-root'));
 
   LD.viewer.startCountdown(function(){
-    LD.data.updateDocumentRequest(docRequest.requestId, {
-      accessToken: null,
-      accessExpiresAt: null,
-      status: 'expired'
-    });
-    LD.data.addAuditLog('session_expired', 'Viewing session expired', 'Session closed for document ' + (doc ? doc.name : 'unknown'));
-    LD.ui.toast('Viewing session closed', 'error');
-    setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+    if (docRequest && docRequest.requestId) {
+      LD.data.updateDocumentRequest(docRequest.requestId, {
+        accessToken: null,
+        accessExpiresAt: null,
+        status: 'expired'
+      });
+      LD.data.addAuditLog('session_expired', 'Viewing session expired', 'Session closed for document ' + (doc ? doc.name : 'unknown'));
+      LD.ui.toast('Viewing session completed for security', 'info');
+    } else {
+      LD.ui.toast('Inspection timer completed', 'info');
+    }
+    setTimeout(function(){ window.location.href = 'index.html'; }, 1000);
   });
 
   document.getElementById('close-viewer-btn').addEventListener('click', function(){

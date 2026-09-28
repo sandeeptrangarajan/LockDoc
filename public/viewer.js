@@ -1,17 +1,16 @@
 /* ============================================================
-   LockDoc — Viewer Page Logic (v4 — Vercel-hardened)
+   LockDoc — Viewer Page Logic (v5 — Real Document Display)
    
    KEY DESIGN:
    - Works WITHOUT requiring the requester to be logged in
    - The requestId + token ARE the credentials
-   - Falls back to credential card if file is unavailable
-     (Vercel serverless storage is ephemeral)
+   - Renders the ACTUAL document file (PDF stream or Image)
    ============================================================ */
 
 /* ─── API helpers ─────────────────────────────────────────── */
 async function apiValidateAccess(requestId, token) {
   try {
-    // NOTE: No auth headers — this endpoint is intentionally public.
+    // NOTE: No auth headers needed — this endpoint is intentionally public.
     // The requestId+token pair IS the authentication.
     const res = await fetch(
       API_BASE + '/api/requests/document/access' +
@@ -102,7 +101,7 @@ function showReceiptNotice(token) {
     '<a href="' + url + '" target="_blank" style="color:#00F0FF;">View receipt</a></p>';
 }
 
-/* ─── Credential card (always-works fallback) ───────────────── */
+/* ─── Digital Credential Card (fallback only) ──────────────── */
 function renderCredentialCard(doc, session) {
   const name    = (doc && (doc.documentName || doc.name))          || 'Secure Document';
   const type    = (doc && (doc.documentType || doc.category))      || 'Official Document';
@@ -126,14 +125,12 @@ function renderCredentialCard(doc, session) {
   };
   const { icon, color } = catMap[cat] || { icon: '📄', color: '#3B82F6' };
 
-  // fake blockchain hash for display
   const hash = Array.from({length: 32}, () =>
     '0123456789ABCDEF'[Math.floor(Math.random() * 16)]
   ).join('');
 
   const card =
     '<div class="cred-card">' +
-      // Header
       '<div class="cred-header">' +
         '<div class="cred-icon" style="background:' + color + '22;border-color:' + color + '44;">' + icon + '</div>' +
         '<div class="cred-header-text">' +
@@ -142,11 +139,7 @@ function renderCredentialCard(doc, session) {
         '</div>' +
         '<div class="cred-badge">✓ Verified</div>' +
       '</div>' +
-
-      // Document name
       '<div class="cred-doc-name">' + name + '</div>' +
-
-      // Fields grid
       '<div class="cred-grid">' +
         '<div class="cred-field"><span class="cred-label">Document Holder</span><span class="cred-val">' + holder + '</span></div>' +
         '<div class="cred-field"><span class="cred-label">Authorised Viewer</span><span class="cred-val">' + viewer + '</span></div>' +
@@ -154,14 +147,10 @@ function renderCredentialCard(doc, session) {
         '<div class="cred-field"><span class="cred-label">Purpose</span><span class="cred-val">' + purpose + '</span></div>' +
         '<div class="cred-field cred-field-full"><span class="cred-label">Access Session</span><span class="cred-val cred-mono">' + viewed + '</span></div>' +
       '</div>' +
-
-      // Security bar
       '<div class="cred-security">' +
         '<span>⛓️ Blockchain Anchored</span>' +
         '<span class="cred-mono" style="font-size:9.5px;opacity:.6;">SHA256:' + hash + '</span>' +
       '</div>' +
-
-      // Chip row
       '<div class="cred-chip-row">' +
         '<div class="cred-chip"></div>' +
         '<div class="cred-hologram">🔒 LOCKDOC SECURE · DIGITAL VAULT</div>' +
@@ -174,69 +163,68 @@ function renderCredentialCard(doc, session) {
   }
 }
 
-/* ─── Try rendering the file, fall back to credential card ──── */
-async function renderDocument(doc, session) {
-  const rawUrl = doc && doc.fileUrl;
-  const shell  = document.getElementById('viewer-doc-area');
+/* ─── Render Actual Document Content ───────────────────────── */
+async function renderDocument(doc, session, requestId, token) {
+  const shell = document.getElementById('viewer-doc-area');
+  if (!shell) return;
 
-  if (!rawUrl) {
+  const docName = (doc && (doc.documentName || doc.name)) || 'Document';
+  const docType = ((doc && doc.documentType) || '').toUpperCase();
+  const mimeType = (doc && doc.metadata && doc.metadata.mimeType) || '';
+
+  // Determine stream endpoint or dataUrl
+  let fileUrl = doc && doc.dataUrl;
+  if (!fileUrl && requestId && token) {
+    fileUrl = API_BASE.replace(/\/+$/, '') + '/api/requests/document/file?requestId=' + encodeURIComponent(requestId) + '&token=' + encodeURIComponent(token);
+  } else if (!fileUrl && doc && doc.fileUrl) {
+    fileUrl = (doc.fileUrl.startsWith('http://') || doc.fileUrl.startsWith('https://') || doc.fileUrl.startsWith('data:'))
+      ? doc.fileUrl
+      : API_BASE.replace(/\/+$/, '') + (doc.fileUrl.startsWith('/') ? doc.fileUrl : '/' + doc.fileUrl);
+  }
+
+  if (!fileUrl) {
     renderCredentialCard(doc, session);
     return;
   }
 
-  // Build full URL
-  const fileUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:'))
-    ? rawUrl
-    : API_BASE.replace(/\/+$/, '') + (rawUrl.startsWith('/') ? rawUrl : '/' + rawUrl);
+  const isImage = (doc.dataUrl && doc.dataUrl.startsWith('data:image/')) ||
+    mimeType.startsWith('image/') ||
+    ['PNG', 'JPG', 'JPEG', 'WEBP', 'GIF', 'SVG'].includes(docType) ||
+    /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(fileUrl);
 
-  // Probe: HEAD request to see if the file actually exists and is non-JSON
-  let fileAccessible = false;
-  try {
-    const probe = await fetch(fileUrl, { method: 'HEAD' });
-    const ct = probe.headers.get('content-type') || '';
-    fileAccessible = probe.ok && !ct.includes('application/json') && !ct.includes('text/html');
-  } catch (e) {
-    fileAccessible = false;
-  }
+  const isPdf = (doc.dataUrl && doc.dataUrl.startsWith('data:application/pdf')) ||
+    mimeType === 'application/pdf' ||
+    docType === 'PDF' ||
+    /\.pdf(\?|$)/i.test(fileUrl);
 
-  if (!fileAccessible) {
-    // File unreachable (common on Vercel ephemeral storage) → credential card
-    renderCredentialCard(doc, session);
-    return;
-  }
-
-  // File accessible — determine type and render accordingly
-  const isImage = /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(fileUrl);
-
-  if (isImage && shell) {
+  // 1. Image Rendering
+  if (isImage) {
     shell.innerHTML =
-      '<img src="' + fileUrl + '" ' +
-      'style="max-width:100%;max-height:520px;object-fit:contain;display:block;margin:0 auto;border-radius:10px;pointer-events:none;" ' +
-      'onerror="this.parentNode.innerHTML=\'<p style=\\\"color:rgba(255,255,255,.5);text-align:center;padding:40px;\\\">⚠️ Could not load image.</p>\';"' +
-      '>';
+      '<div style="padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:480px;background:#0d1322;">' +
+        '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 8px;">' +
+          '<span style="font-size:12px;color:#00F0FF;font-weight:700;">📷 ' + docName + '</span>' +
+          '<a href="' + fileUrl + '" target="_blank" rel="noopener" style="font-size:11px;color:#38BDF8;text-decoration:none;">Open Full Size ↗</a>' +
+        '</div>' +
+        '<img src="' + fileUrl + '" alt="' + docName + '" ' +
+        'style="max-width:100%;max-height:65vh;object-fit:contain;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.6);border:1px solid rgba(0,240,255,0.2);" ' +
+        'onerror="this.parentNode.innerHTML=\'<p style=\\\"color:rgba(255,255,255,.5);text-align:center;padding:40px;\\\">⚠️ Document image preview failed to load.</p>\';"' +
+        '>' +
+      '</div>';
     return;
   }
 
-  // PDF or other — use iframe with error detection
-  if (shell) {
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'width:100%;min-height:520px;border:none;border-radius:0;background:#111827;';
-    iframe.sandbox = 'allow-same-origin allow-scripts';
-    shell.innerHTML = '';
-    shell.appendChild(iframe);
-
-    iframe.onload = function() {
-      try {
-        const body = iframe.contentDocument && iframe.contentDocument.body;
-        if (body && body.innerText && body.innerText.trim().startsWith('{')) {
-          // Iframe loaded a JSON error — swap to credential card
-          renderCredentialCard(doc, session);
-        }
-      } catch(e) { /* cross-origin — assume OK */ }
-    };
-    iframe.onerror = function() { renderCredentialCard(doc, session); };
-    iframe.src = fileUrl;
-  }
+  // 2. PDF or Streaming Document Rendering
+  shell.innerHTML =
+    '<div style="width:100%;min-height:580px;height:72vh;display:flex;flex-direction:column;background:#0d1322;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,0.4);border-bottom:1px solid rgba(0,240,255,0.12);font-size:12px;color:#94a3b8;">' +
+        '<span>📑 <strong>' + docName + '</strong> (Encrypted Stream)</span>' +
+        '<a href="' + fileUrl + '" target="_blank" rel="noopener" style="color:#00F0FF;text-decoration:none;font-weight:700;">Open Direct ↗</a>' +
+      '</div>' +
+      '<iframe src="' + fileUrl + '#toolbar=0&navpanes=0" ' +
+      'style="flex:1;width:100%;height:100%;border:none;background:#1e293b;" ' +
+      'sandbox="allow-same-origin allow-scripts allow-forms" ' +
+      'title="' + docName + '"></iframe>' +
+    '</div>';
 }
 
 /* ─── Main ──────────────────────────────────────────────────── */
@@ -295,8 +283,8 @@ async function setupViewerPage() {
   // ── Show active viewer ───────────────────────────────────────
   if (activeEl) activeEl.style.display = 'block';
 
-  // ── Render document content ──────────────────────────────────
-  await renderDocument(doc, session);
+  // ── Render actual document content ───────────────────────────
+  await renderDocument(doc, session, requestId, token);
 
   // ── Watermark ────────────────────────────────────────────────
   buildWatermark((session.requesterName || 'VIEWER') + ' · ' + new Date().toLocaleDateString('en-IN'));

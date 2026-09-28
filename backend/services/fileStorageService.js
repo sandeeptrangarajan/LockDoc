@@ -72,21 +72,59 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
 }
 
 async function uploadFile(file, folderPath) {
-  if (cloudinaryEnabled && cloudinary) {
-    const uploadOptions = {
-      folder: folderPath,
-      resource_type: 'auto',
-      use_filename: true,
-      unique_filename: false,
-      overwrite: false
-    };
-    const result = await cloudinary.uploader.upload(file.path, uploadOptions);
-    return { url: result.secure_url, provider: 'cloudinary', publicId: result.public_id };
+  let fileBuffer = null;
+  let base64Data = null;
+  let dataUrl = null;
+
+  try {
+    if (file.path && fs.existsSync(file.path)) {
+      fileBuffer = fs.readFileSync(file.path);
+      base64Data = fileBuffer.toString('base64');
+      const mime = file.mimetype || 'application/octet-stream';
+      dataUrl = `data:${mime};base64,${base64Data}`;
+    } else if (file.buffer) {
+      fileBuffer = file.buffer;
+      base64Data = fileBuffer.toString('base64');
+      const mime = file.mimetype || 'application/octet-stream';
+      dataUrl = `data:${mime};base64,${base64Data}`;
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not generate base64 representation:', err.message);
   }
 
-  // Local fallback: expose the uploaded file from /uploads/vaults
-  const publicUrl = `/uploads/vaults/${encodeURIComponent(path.basename(file.path))}`;
-  return { url: publicUrl, provider: 'local' };
+  if (cloudinaryEnabled && cloudinary && file.path && fs.existsSync(file.path)) {
+    try {
+      const uploadOptions = {
+        folder: folderPath,
+        resource_type: 'auto',
+        use_filename: true,
+        unique_filename: false,
+        overwrite: false
+      };
+      const result = await cloudinary.uploader.upload(file.path, uploadOptions);
+      return {
+        url: result.secure_url,
+        fileData: base64Data,
+        dataUrl: dataUrl || result.secure_url,
+        provider: 'cloudinary',
+        publicId: result.public_id
+      };
+    } catch (cErr) {
+      console.warn('⚠️ Cloudinary upload failed, falling back to database/local:', cErr.message);
+    }
+  }
+
+  // Database / Local fallback: store dataUrl or relative URL
+  const filename = path.basename(file.path || file.originalname || 'document');
+  const publicUrl = `/uploads/vaults/${encodeURIComponent(filename)}`;
+
+  return {
+    url: dataUrl || publicUrl,
+    fileData: base64Data,
+    dataUrl: dataUrl || publicUrl,
+    publicUrl: publicUrl,
+    provider: base64Data ? 'mongodb' : 'local'
+  };
 }
 
 module.exports = {

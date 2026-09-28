@@ -36,6 +36,10 @@ const documentSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  fileData: {
+    type: String,
+    default: null
+  },
   uploadDate: {
     type: Date,
     default: Date.now

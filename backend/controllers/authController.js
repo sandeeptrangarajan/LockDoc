@@ -324,19 +324,17 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Find user with password field
-    const user = await User.findByEmailWithPassword(email);
+    // Find user with password field (supports exact and case-insensitive)
+    let user = await User.findByEmailWithPassword(email);
+    if (!user) {
+      const cleanEmail = email.trim().toLowerCase();
+      user = await User.findOne({ email: new RegExp('^' + cleanEmail + '$', 'i') }).select('+password');
+    }
+
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'No account found with this email. Please register first.'
-      });
-    }
-
-    if (!user.isVerified) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email not verified. Please complete registration first.'
       });
     }
 
@@ -347,6 +345,15 @@ exports.login = async (req, res) => {
         success: false,
         message: 'Incorrect password.'
       });
+    }
+
+    // Auto-verify user and set terms accepted upon correct password entry
+    if (!user.isVerified) {
+      user.isVerified = true;
+      if (!user.lockdocId) user.generateLockdocId();
+    }
+    if (!user.termsAcceptedAt) {
+      user.termsAcceptedAt = new Date();
     }
 
     // Update lastLogin
